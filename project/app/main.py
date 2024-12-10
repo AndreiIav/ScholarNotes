@@ -1,10 +1,12 @@
+import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
-from app.api.routers.projects import project_router
-from app.config import Settings, get_settings
+from app.api.routers import ping, projects
 from app.database import sessionmanager
+
+log = logging.getLogger("uvicorn")
 
 
 @asynccontextmanager
@@ -12,26 +14,20 @@ async def lifespan(app: FastAPI):
     """
     Function that handles startup and shutdown events.
     """
+    log.info("Starting up...")
     yield
     if sessionmanager._engine is not None:
         # Close the DB connection
         await sessionmanager.close()
+    log.info("Shutting down...")
 
 
-app = FastAPI()
+def create_application() -> FastAPI:
+    application = FastAPI(lifespan=lifespan)
+    application.include_router(ping.ping_router)
+    application.include_router(projects.project_router)
 
-app.include_router(project_router)
-
-
-@app.get("/")
-async def root():
-    return {"message": "Ok"}
+    return application
 
 
-@app.get("/ping")
-async def pong(settings: Settings = Depends(get_settings)):
-    return {
-        "ping": "pong!",
-        "environment": settings.environment,
-        "testing": settings.testing,
-    }
+app = create_application()
