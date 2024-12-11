@@ -1,12 +1,15 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
-class Project(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class ProjectResponseSchema(BaseModel):
     id: int
     name: str
-    comment: str
+    comment: str | None = None
     created_at: datetime
+
+
+class ProjectPayloadSchema(BaseModel):
+    name: str
+    comment: str | None = None

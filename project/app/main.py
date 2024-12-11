@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
 def create_application() -> FastAPI:
     application = FastAPI(lifespan=lifespan)
     application.include_router(ping.ping_router)
-    application.include_router(projects.project_router)
+    application.include_router(projects.router, prefix="/projects", tags=["projects"])
 
     return application
 
