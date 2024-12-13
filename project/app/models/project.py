@@ -5,7 +5,7 @@ from sqlalchemy import TIMESTAMP, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from . import Base
+from app.database import Base
 
 
 class Project(Base):
