@@ -17,6 +17,8 @@ class Base(DeclarativeBase):
     __mapper_args__ = {"eager_defaults": True}
 
 
+# from this blog post
+# https://medium.com/@tclaitken/setting-up-a-fastapi-app-with-async-sqlalchemy-2-0-pydantic-v2-e6c540be4308
 class DatabaseSessionManager:
     def __init__(self, host: str, engine_kwargs: dict[str, Any] = {}):
         self._engine = create_async_engine(host, **engine_kwargs)
