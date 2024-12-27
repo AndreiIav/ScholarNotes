@@ -4,21 +4,15 @@ import os
 import pytest
 from alembic import command, config
 from app.config import Settings, get_settings
-from app.database import Base, DatabaseSessionManager, get_db_session
+from app.database import DatabaseSessionManager, get_db_session
 from app.main import create_application
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql import text
 
 
 def get_settings_override():
     return Settings(testing=1, database_url=os.environ.get("DATABASE_TEST_URL"))
-
-
-settings = get_settings_override()
-database_url = str(settings.database_url)
-sessionmanager = DatabaseSessionManager(database_url)
 
 
 def run_latest_migration():
@@ -39,8 +33,12 @@ def run_latest_migration():
 
 
 async def get_session_override():
+    settings = get_settings_override()
+    database_url = str(settings.database_url)
+    sessionmanager = DatabaseSessionManager(database_url)
     async with sessionmanager.session() as session:
         yield session
+        await session.close()
 
 
 def truncate_tables():
@@ -57,14 +55,6 @@ def truncate_tables():
 
 @pytest.fixture(scope="module")
 def test_app():
-    app = create_application()
-    app.dependency_overrides[get_settings] = get_settings_override
-    with TestClient(app) as test_client:
-        yield test_client
-
-
-@pytest.fixture(scope="module")
-def test_app_with_db():
     # set up
     app = create_application()
     app.dependency_overrides[get_settings] = get_settings_override

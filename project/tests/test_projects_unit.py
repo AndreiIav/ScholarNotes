@@ -19,10 +19,10 @@ def test_get_project(test_app, monkeypatch):
         },
     ]
 
-    async def mock_get_project(db_session):
+    async def mock_get_projects(db_session):
         return test_data
 
-    monkeypatch.setattr(projects, "get_all_projects", mock_get_project)
+    monkeypatch.setattr(projects, "get_all_projects", mock_get_projects)
 
     response = test_app.get("/projects/")
 
