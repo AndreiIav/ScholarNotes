@@ -17,6 +17,17 @@ async def get_project(db_session: AsyncSession, project_id: int):
 
 
 async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
+    check_project_name_query = select(ProjectDBModel).where(
+        ProjectDBModel.name == payload.name
+    )
+    project = await db_session.execute(check_project_name_query)
+    project = project.one_or_none()
+    if project:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Project name '{payload.name}' already exists. Please"
+            " select a unique project name and try again.",
+        )
     new_project = ProjectDBModel(name=payload.name, comment=payload.comment)
     db_session.add(new_project)
     await db_session.commit()
@@ -25,7 +36,7 @@ async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
     return new_project
 
 
-async def get_all_projects(db_sessions: AsyncSession):
-    all_projects = await db_sessions.scalars(select(ProjectDBModel))
+async def get_all_projects(db_session: AsyncSession):
+    all_projects = await db_session.scalars(select(ProjectDBModel))
 
     return all_projects
