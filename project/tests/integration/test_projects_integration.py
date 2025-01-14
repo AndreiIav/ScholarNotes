@@ -25,7 +25,9 @@ class TestPostProject:
         # it shouldn't be more than one second
         assert seconds_diff.seconds <= 1
 
-    def test_cannot_add_a_project_with_already_existing_name(self, test_app):
+    def test_cannot_add_a_project_with_already_existing_name(
+        self, test_app, delete_project_table_data
+    ):
         payload = {"name": "test_name_1", "comment": "test_comment_1"}
 
         test_app.post("/projects", data=json.dumps(payload))
@@ -36,3 +38,20 @@ class TestPostProject:
             f"Project name '{payload['name']}' already exists. Please select a"
             " unique project name and try again." == response.json()["detail"]
         )
+
+
+class TestGetProject:
+    def test_get_projects(self, test_app, add_project_data, delete_project_table_data):
+        response = test_app.get("/projects")
+
+        assert response.status_code == 200
+
+        assert response.json()[0]["id"]
+        assert response.json()[0]["name"] == "test_name"
+        assert response.json()[0]["comment"] == "test_comment"
+        assert response.json()[0]["created_at"]
+
+        assert response.json()[1]["id"]
+        assert response.json()[1]["name"] == "test_name_2"
+        assert response.json()[1]["comment"] == "test_comment_2"
+        assert response.json()[1]["created_at"]
