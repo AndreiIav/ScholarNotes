@@ -6,9 +6,10 @@ from alembic import command, config
 from app.config import Settings, get_settings
 from app.database import DatabaseSessionManager, get_db_session
 from app.main import create_application
+from app.models import Project
 from fastapi.testclient import TestClient
+from sqlalchemy import delete, insert
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.sql import text
 
 
 def get_settings_override():
@@ -33,24 +34,40 @@ def run_latest_migration():
 
 
 async def get_session_override():
-    settings = get_settings_override()
-    database_url = str(settings.database_url)
+    database_url = os.environ.get("DATABASE_TEST_URL")
     sessionmanager = DatabaseSessionManager(database_url)
     async with sessionmanager.session() as session:
         yield session
         await session.close()
 
 
-def truncate_tables():
-    async def _truncate_tables():
-        # https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html#asyncio-platform-installation-notes-including-apple-m1
-        settings = get_settings_override()
-        database_url = str(settings.database_url)
-        engine = create_async_engine(database_url)
-        async with engine.begin() as conn:
-            await conn.execute(text("TRUNCATE TABLE project"))
+@pytest.fixture(scope="class")
+async def get_session():
+    database_url = os.environ.get("DATABASE_TEST_URL")
+    sessionmanager = DatabaseSessionManager(database_url)
+    async with sessionmanager.session() as session:
+        yield session
+        await session.close()
 
-    asyncio.run(_truncate_tables())
+
+@pytest.fixture(scope="function")
+async def delete_project_table_data(get_session):
+    yield
+    session = get_session
+    await session.execute(delete(Project))
+    await session.commit()
+
+
+@pytest.fixture(scope="function")
+async def add_project_data(get_session):
+    insert_stmt_1 = insert(Project).values(name="test_name", comment="test_comment")
+    insert_stmt_2 = insert(Project).values(name="test_name_2", comment="test_comment_2")
+
+    session = get_session
+    await session.execute(insert_stmt_1)
+    await session.execute(insert_stmt_2)
+    await session.commit()
+    yield
 
 
 @pytest.fixture(scope="module")
@@ -62,4 +79,3 @@ def test_app():
     run_latest_migration()
     with TestClient(app) as test_client:
         yield test_client
-    truncate_tables()
