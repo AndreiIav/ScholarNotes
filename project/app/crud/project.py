@@ -37,6 +37,8 @@ async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
 
 
 async def get_all_projects(db_session: AsyncSession):
-    all_projects = await db_session.scalars(select(ProjectDBModel))
+    all_projects = await db_session.scalars(
+        select(ProjectDBModel).order_by(ProjectDBModel.id)
+    )
 
     return all_projects
