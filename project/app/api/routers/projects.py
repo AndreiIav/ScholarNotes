@@ -2,7 +2,7 @@ from app.api.dependencies.core import DBSessionDep
 from app.crud.project import (
     check_if_project_name_exists,
     get_all_projects,
-    get_project_by_name,
+    get_project_by_id,
     post_project,
 )
 from app.schemas.project import ProjectPayloadSchema, ProjectResponseSchema
@@ -12,18 +12,16 @@ router = APIRouter()
 
 
 @router.get(
-    "/{project_name}/",
+    "/{project_id}/",
     response_model=ProjectResponseSchema,
 )
 async def get_project(
-    project_name: str,
+    project_id: int,
     db_session: DBSessionDep,
 ) -> ProjectResponseSchema:
-    project = await get_project_by_name(db_session, project_name)
+    project = await get_project_by_id(db_session, project_id)
     if not project:
-        raise HTTPException(
-            status_code=404, detail=f"Project {project_name} does not exists."
-        )
+        raise HTTPException(status_code=404, detail="Project id not found.")
 
     return project
 

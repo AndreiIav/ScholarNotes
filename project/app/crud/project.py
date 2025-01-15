@@ -4,10 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def get_project_by_name(db_session: AsyncSession, project_name: str):
+async def get_project_by_id(db_session: AsyncSession, project_id: int):
     project = (
         await db_session.scalars(
-            select(ProjectDBModel).where(ProjectDBModel.name == project_name)
+            select(ProjectDBModel).where(ProjectDBModel.id == project_id)
         )
     ).first()
 

@@ -81,19 +81,20 @@ class TestGetAllProjects:
 
 class TestGetProject:
     def test_get_project(self, test_app, monkeypatch):
+        test_id = 1
         test_data = {
-            "id": 1,
+            "id": test_id,
             "name": "test_name",
             "comment": "test_comment",
             "created_at": datetime(2024, 12, 1).isoformat(),
         }
 
-        async def mock_get_project_by_name(fake_db_session, fake_project_name):
+        async def mock_get_project_by_id(fake_db_session, fake_project_id):
             return test_data
 
-        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
+        monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
 
-        response = test_app.get("/projects/test_name")
+        response = test_app.get(f"/projects/{test_id}")
 
         assert response.status_code == 200
         assert response.json() == test_data
@@ -103,13 +104,12 @@ class TestGetProject:
         test_app,
         monkeypatch,
     ):
-        async def mock_get_project_by_name(fake_db_session, fake_project_name):
+        async def mock_get_project_by_id(fake_db_session, fake_project_id):
             return None
 
-        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
-        project_name = "test_name"
+        monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
 
-        response = test_app.get(f"/projects/{project_name}")
+        response = test_app.get("/projects/999")
 
         assert response.status_code == 404
-        assert response.json()["detail"] == f"Project {project_name} does not exists."
+        assert response.json()["detail"] == "Project id not found."

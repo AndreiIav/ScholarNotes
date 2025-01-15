@@ -60,8 +60,12 @@ async def delete_project_table_data(get_session):
 
 @pytest.fixture(scope="function")
 async def add_project_data(get_session):
-    insert_stmt_1 = insert(Project).values(name="test_name", comment="test_comment")
-    insert_stmt_2 = insert(Project).values(name="test_name_2", comment="test_comment_2")
+    insert_stmt_1 = insert(Project).values(
+        id=1, name="test_name", comment="test_comment"
+    )
+    insert_stmt_2 = insert(Project).values(
+        id=2, name="test_name_2", comment="test_comment_2"
+    )
 
     session = get_session
     await session.execute(insert_stmt_1)

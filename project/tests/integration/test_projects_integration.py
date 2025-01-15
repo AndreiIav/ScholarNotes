@@ -46,11 +46,12 @@ class TestGetAllProjects:
 
 class TestGetProject:
     def test_get_project(self, test_app, add_project_data, delete_project_table_data):
-        response = test_app.get("/projects/test_name")
+        test_project_id = 1
+        response = test_app.get(f"/projects/{test_project_id}")
 
         assert response.status_code == 200
 
-        assert response.json()["id"]
+        assert response.json()["id"] == test_project_id
         assert response.json()["name"] == "test_name"
         assert response.json()["comment"] == "test_comment"
         assert response.json()["created_at"]
