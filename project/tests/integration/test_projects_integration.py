@@ -40,11 +40,12 @@ class TestPostProject:
         )
 
 
-class TestGetProject:
+class TestGetAllProjects:
     def test_get_projects(self, test_app, add_project_data, delete_project_table_data):
         response = test_app.get("/projects")
 
         assert response.status_code == 200
+        assert len(response.json()) == 2
 
         assert response.json()[0]["id"]
         assert response.json()[0]["name"] == "test_name"
@@ -55,3 +56,23 @@ class TestGetProject:
         assert response.json()[1]["name"] == "test_name_2"
         assert response.json()[1]["comment"] == "test_comment_2"
         assert response.json()[1]["created_at"]
+
+
+class TestGetProject:
+    def test_get_project(self, test_app, add_project_data, delete_project_table_data):
+        response = test_app.get("/projects/test_name")
+
+        assert response.status_code == 200
+
+        assert response.json()["id"]
+        assert response.json()["name"] == "test_name"
+        assert response.json()["comment"] == "test_comment"
+        assert response.json()["created_at"]
+
+    def test_get_not_existent_project(self, test_app):
+        project_name = "inexistent_name"
+
+        response = test_app.get(f"/projects/{project_name}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == f"Project {project_name} does not exists."
