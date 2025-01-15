@@ -5,14 +5,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def get_project(db_session: AsyncSession, project_id: int):
+async def get_project_by_name(db_session: AsyncSession, project_name: str):
     project = (
         await db_session.scalars(
-            select(ProjectDBModel).where(ProjectDBModel.id == project_id)
+            select(ProjectDBModel).where(ProjectDBModel.name == project_name)
         )
     ).first()
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+
     return project
 
 
