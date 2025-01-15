@@ -41,7 +41,7 @@ async def get_session_override():
         await session.close()
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="function")
 async def get_session():
     database_url = os.environ.get("DATABASE_TEST_URL")
     sessionmanager = DatabaseSessionManager(database_url)
