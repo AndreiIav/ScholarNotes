@@ -1,5 +1,10 @@
 from app.api.dependencies.core import DBSessionDep
-from app.crud.project import get_all_projects, get_project_by_name, post_project
+from app.crud.project import (
+    check_if_project_name_exists,
+    get_all_projects,
+    get_project_by_name,
+    post_project,
+)
 from app.schemas.project import ProjectPayloadSchema, ProjectResponseSchema
 from fastapi import APIRouter, HTTPException
 
@@ -34,6 +39,14 @@ async def get_projects(db_session: DBSessionDep) -> list[ProjectResponseSchema]:
 async def create_project(
     payload: ProjectPayloadSchema, db_session: DBSessionDep
 ) -> ProjectResponseSchema:
+    project_name_exists = await check_if_project_name_exists(payload.name, db_session)
+    if project_name_exists:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Project name '{payload.name}' already exists. Please"
+            " select a unique project name and try again.",
+        )
+
     response = await post_project(payload, db_session)
 
     return response

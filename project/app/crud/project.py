@@ -1,6 +1,5 @@
 from app.models import Project as ProjectDBModel
 from app.schemas.project import ProjectPayloadSchema
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,23 +15,20 @@ async def get_project_by_name(db_session: AsyncSession, project_name: str):
 
 
 async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
-    check_project_name_query = select(ProjectDBModel).where(
-        ProjectDBModel.name == payload.name
-    )
-    project = await db_session.execute(check_project_name_query)
-    project = project.one_or_none()
-    if project:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Project name '{payload.name}' already exists. Please"
-            " select a unique project name and try again.",
-        )
     new_project = ProjectDBModel(name=payload.name, comment=payload.comment)
     db_session.add(new_project)
     await db_session.commit()
     await db_session.refresh(new_project)
 
     return new_project
+
+
+async def check_if_project_name_exists(project_name: str, db_session: AsyncSession):
+    query = select(ProjectDBModel).where(ProjectDBModel.name == project_name)
+    project = await db_session.scalars(query)
+    project = project.one_or_none()
+
+    return project
 
 
 async def get_all_projects(db_session: AsyncSession):

@@ -29,6 +29,27 @@ class TestPostProject:
 
         assert response.status_code == 422
 
+    def test_cannot_add_a_project_with_already_existing_name(
+        self, test_app, monkeypatch
+    ):
+        project_name = "test_name_1"
+
+        async def mock_check_if_project_name_exists(project_name, db_session):
+            return project_name
+
+        monkeypatch.setattr(
+            projects, "check_if_project_name_exists", mock_check_if_project_name_exists
+        )
+        payload = {"name": project_name, "comment": "test_comment_1"}
+
+        response = test_app.post("/projects", data=json.dumps(payload))
+
+        assert response.status_code == 400
+        assert (
+            f"Project name '{payload['name']}' already exists. Please select a"
+            " unique project name and try again." == response.json()["detail"]
+        )
+
 
 class TestGetAllProjects:
     def test_get_all_projects(self, test_app, monkeypatch):
