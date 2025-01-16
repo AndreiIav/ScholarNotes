@@ -2,6 +2,7 @@ import asyncio
 import os
 
 from alembic import context
+from app import models
 from app.models import Base
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
