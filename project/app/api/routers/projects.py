@@ -17,8 +17,8 @@ router = APIRouter()
     response_model=ProjectResponseSchema,
 )
 async def get_project(
-    project_id: int,
     db_session: DBSessionDep,
+    project_id: int = Path(..., gt=0),
 ) -> ProjectResponseSchema:
     project = await get_project_by_id(db_session, project_id)
     if not project:
