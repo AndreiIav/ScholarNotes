@@ -1,5 +1,6 @@
 import asyncio
 import os
+from unittest.mock import AsyncMock
 
 import pytest
 from alembic import command, config
@@ -33,7 +34,13 @@ def run_latest_migration():
     asyncio.run(run_async_upgrade())
 
 
-async def get_session_override():
+async def get_mock_session_override():
+    mock_session = AsyncMock()
+    async with mock_session as session:
+        yield session
+
+
+async def get_test_session_override():
     database_url = os.environ.get("DATABASE_TEST_URL")
     sessionmanager = DatabaseSessionManager(database_url)
     async with sessionmanager.session() as session:
@@ -79,7 +86,16 @@ def test_app():
     # set up
     app = create_application()
     app.dependency_overrides[get_settings] = get_settings_override
-    app.dependency_overrides[get_db_session] = get_session_override
+    app.dependency_overrides[get_db_session] = get_test_session_override
     run_latest_migration()
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+@pytest.fixture(scope="module")
+def test_app_without_db():
+    app = create_application()
+    app.dependency_overrides[get_settings] = get_settings_override
+    app.dependency_overrides[get_db_session] = get_mock_session_override
     with TestClient(app) as test_client:
         yield test_client
