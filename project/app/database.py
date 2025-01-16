@@ -1,6 +1,7 @@
 import contextlib
 from typing import Any, AsyncIterator
 
+from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
     AsyncSession,
@@ -15,6 +16,16 @@ from app.config import get_settings
 class Base(DeclarativeBase):
     # https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html#preventing-implicit-io-when-using-asyncsession
     __mapper_args__ = {"eager_defaults": True}
+
+    metadata = MetaData(
+        naming_convention={
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(column_0_name)s",
+            "ck": "ck_%(table_name)s_%(constraint_name)s",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s",
+        }
+    )
 
 
 # from this blog post
