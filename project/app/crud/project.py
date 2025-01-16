@@ -5,11 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def get_project_by_id(db_session: AsyncSession, project_id: int):
-    project = (
-        await db_session.scalars(
-            select(ProjectDBModel).where(ProjectDBModel.id == project_id)
-        )
-    ).first()
+    query = select(ProjectDBModel).where(ProjectDBModel.id == project_id)
+    project = await db_session.scalars(query)
+    project = project.one_or_none()
 
     return project
 
@@ -32,9 +30,8 @@ async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
 
 
 async def get_all_projects(db_session: AsyncSession):
-    all_projects = await db_session.scalars(
-        select(ProjectDBModel).order_by(ProjectDBModel.id)
-    )
+    query = select(ProjectDBModel).order_by(ProjectDBModel.id)
+    all_projects = await db_session.scalars(query)
 
     return all_projects
 
