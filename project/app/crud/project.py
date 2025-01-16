@@ -1,6 +1,6 @@
 from app.models import Project as ProjectDBModel
 from app.schemas.project import ProjectPayloadSchema
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -37,3 +37,15 @@ async def get_all_projects(db_session: AsyncSession):
     )
 
     return all_projects
+
+
+async def update_project(
+    project_id: int, payload: ProjectPayloadSchema, db_session: AsyncSession
+):
+    query = (
+        update(ProjectDBModel)
+        .where(ProjectDBModel.id == project_id)
+        .values(name=payload.name, comment=payload.comment)
+    )
+    await db_session.execute(query)
+    await db_session.commit()

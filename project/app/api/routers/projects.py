@@ -4,9 +4,10 @@ from app.crud.project import (
     get_all_projects,
     get_project_by_id,
     post_project,
+    update_project,
 )
 from app.schemas.project import ProjectPayloadSchema, ProjectResponseSchema
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 
 router = APIRouter()
 
@@ -48,3 +49,31 @@ async def create_project(
     response = await post_project(payload, db_session)
 
     return response
+
+
+@router.patch("/{project_id}/", response_model=ProjectResponseSchema, status_code=200)
+async def patch_project(
+    payload: ProjectPayloadSchema,
+    db_session: DBSessionDep,
+    project_id: int = Path(..., gt=0),
+) -> ProjectResponseSchema:
+    project = await get_project_by_id(db_session, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project id not found.")
+
+    # check if the project name is requested to be updated
+    if project.name != payload.name:
+        # check if the updated_name already exists
+        updated_name_exists = await check_if_project_name_exists(
+            payload.name, db_session
+        )
+        if updated_name_exists:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Project name '{payload.name}' already exists."
+                " Please select a unique project name and try again.",
+            )
+
+    await update_project(project_id, payload, db_session)
+
+    return project

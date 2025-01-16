@@ -55,3 +55,24 @@ class TestGetProject:
         assert response.json()["name"] == "test_name"
         assert response.json()["comment"] == "test_comment"
         assert response.json()["created_at"]
+
+
+class TestPatchProject:
+    def test_patch_project_happy_path(
+        self, test_app, add_project_data, delete_project_table_data
+    ):
+        test_project_id = 1
+        payload_request_data = {
+            "name": "updated_test_name",
+            "comment": "updated_test_comment",
+        }
+
+        response = test_app.patch(
+            f"/projects/{test_project_id}", data=json.dumps(payload_request_data)
+        )
+
+        assert response.status_code == 200
+        assert response.json()["id"] == test_project_id
+        assert response.json()["name"] == payload_request_data["name"]
+        assert response.json()["comment"] == payload_request_data["comment"]
+        assert response.json()["created_at"]
