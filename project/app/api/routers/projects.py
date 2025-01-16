@@ -1,8 +1,8 @@
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import (
-    check_if_project_name_exists,
     get_all_projects,
     get_project_by_id,
+    get_project_by_name,
     post_project,
     update_project,
 )
@@ -38,8 +38,8 @@ async def get_projects(db_session: DBSessionDep) -> list[ProjectResponseSchema]:
 async def create_project(
     payload: ProjectPayloadSchema, db_session: DBSessionDep
 ) -> ProjectResponseSchema:
-    project_name_exists = await check_if_project_name_exists(payload.name, db_session)
-    if project_name_exists:
+    project = await get_project_by_name(payload.name, db_session)
+    if project:
         raise HTTPException(
             status_code=400,
             detail=f"Project name '{payload.name}' already exists. Please"
@@ -64,10 +64,8 @@ async def patch_project(
     # check if the project name is requested to be updated
     if project.name != payload.name:
         # check if the updated_name already exists
-        updated_name_exists = await check_if_project_name_exists(
-            payload.name, db_session
-        )
-        if updated_name_exists:
+        updated_name = await get_project_by_name(payload.name, db_session)
+        if updated_name:
             raise HTTPException(
                 status_code=400,
                 detail=f"Project name '{payload.name}' already exists."

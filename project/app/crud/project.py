@@ -14,6 +14,14 @@ async def get_project_by_id(db_session: AsyncSession, project_id: int):
     return project
 
 
+async def get_project_by_name(project_name: str, db_session: AsyncSession):
+    query = select(ProjectDBModel).where(ProjectDBModel.name == project_name)
+    project = await db_session.scalars(query)
+    project = project.one_or_none()
+
+    return project
+
+
 async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
     new_project = ProjectDBModel(name=payload.name, comment=payload.comment)
     db_session.add(new_project)
@@ -21,14 +29,6 @@ async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
     await db_session.refresh(new_project)
 
     return new_project
-
-
-async def check_if_project_name_exists(project_name: str, db_session: AsyncSession):
-    query = select(ProjectDBModel).where(ProjectDBModel.name == project_name)
-    project = await db_session.scalars(query)
-    project = project.one_or_none()
-
-    return project
 
 
 async def get_all_projects(db_session: AsyncSession):

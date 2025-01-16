@@ -15,15 +15,13 @@ class TestPostProject:
             "created_at": datetime(2024, 12, 1).isoformat(),
         }
 
-        async def mock_check_if_project_name_exists(project_name, db_session):
+        async def mock_get_project_by_name(project_name, db_session):
             return None
 
         async def mock_post_project(payload, db_session):
             return test_response_payload
 
-        monkeypatch.setattr(
-            projects, "check_if_project_name_exists", mock_check_if_project_name_exists
-        )
+        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
         monkeypatch.setattr(projects, "post_project", mock_post_project)
 
         response = test_app_without_db.post(
@@ -43,12 +41,10 @@ class TestPostProject:
     ):
         project_name = "test_name_1"
 
-        async def mock_check_if_project_name_exists(project_name, db_session):
+        async def mock_get_project_by_name(project_name, db_session):
             return project_name
 
-        monkeypatch.setattr(
-            projects, "check_if_project_name_exists", mock_check_if_project_name_exists
-        )
+        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
         payload = {"name": project_name, "comment": "test_comment_1"}
 
         response = test_app_without_db.post("/projects", data=json.dumps(payload))
@@ -155,12 +151,10 @@ class TestPatchProject:
 
         monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
 
-        async def mock_check_if_project_name_exists(name, db_session):
+        async def mock_get_project_by_name(name, db_session):
             return True
 
-        monkeypatch.setattr(
-            projects, "check_if_project_name_exists", mock_check_if_project_name_exists
-        )
+        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
 
         payload_request = {
             "name": "another_name",
