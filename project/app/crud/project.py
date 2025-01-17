@@ -4,7 +4,9 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def get_project_by_id(db_session: AsyncSession, project_id: int):
+async def get_project_by_id(
+    db_session: AsyncSession, project_id: int
+) -> ProjectDBModel | None:
     query = select(ProjectDBModel).where(ProjectDBModel.id == project_id)
     project = await db_session.scalars(query)
     project = project.one_or_none()
@@ -12,7 +14,9 @@ async def get_project_by_id(db_session: AsyncSession, project_id: int):
     return project
 
 
-async def get_project_by_name(project_name: str, db_session: AsyncSession):
+async def get_project_by_name(
+    project_name: str, db_session: AsyncSession
+) -> ProjectDBModel | None:
     query = select(ProjectDBModel).where(ProjectDBModel.name == project_name)
     project = await db_session.scalars(query)
     project = project.one_or_none()
@@ -20,7 +24,9 @@ async def get_project_by_name(project_name: str, db_session: AsyncSession):
     return project
 
 
-async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
+async def post_project(
+    payload: ProjectPayloadSchema, db_session: AsyncSession
+) -> ProjectDBModel:
     new_project = ProjectDBModel(name=payload.name, comment=payload.comment)
     db_session.add(new_project)
     await db_session.commit()
@@ -29,7 +35,7 @@ async def post_project(payload: ProjectPayloadSchema, db_session: AsyncSession):
     return new_project
 
 
-async def get_all_projects(db_session: AsyncSession):
+async def get_all_projects(db_session: AsyncSession) -> list[ProjectDBModel] | None:
     query = select(ProjectDBModel).order_by(ProjectDBModel.id)
     all_projects = await db_session.scalars(query)
 
@@ -38,7 +44,7 @@ async def get_all_projects(db_session: AsyncSession):
 
 async def update_project(
     project_id: int, payload: ProjectPayloadSchema, db_session: AsyncSession
-):
+) -> None:
     query = (
         update(ProjectDBModel)
         .where(ProjectDBModel.id == project_id)
@@ -48,6 +54,6 @@ async def update_project(
     await db_session.commit()
 
 
-async def remove_project(project: ProjectDBModel, db_session: AsyncSession):
+async def remove_project(project: ProjectDBModel, db_session: AsyncSession) -> None:
     await db_session.delete(project)
     await db_session.commit()
