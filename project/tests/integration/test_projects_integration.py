@@ -76,3 +76,31 @@ class TestPatchProject:
         assert response.json()["name"] == payload_request_data["name"]
         assert response.json()["comment"] == payload_request_data["comment"]
         assert response.json()["created_at"]
+
+
+class TestDeleteProject:
+    def test_delete_project_deletes_project(
+        self, test_app, add_project_data, delete_project_table_data
+    ):
+        delete_project_response = test_app.delete("/projects/1/")
+        get_deleted_project_response = test_app.get("/projects/1/")
+
+        assert delete_project_response.status_code == 200
+        assert delete_project_response.json()["name"] == "test_name"
+        assert delete_project_response.json()["comment"] == "test_comment"
+
+        assert get_deleted_project_response.status_code == 404
+        assert get_deleted_project_response.json()["detail"] == "Project id not found."
+
+    def test_delete_project_with_inexistent_id(self, test_app):
+        response = test_app.delete("/projects/999/")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found."
+
+    def test_delete_project_with_incorrect_id(self, test_app):
+        response = test_app.delete("/projects/0")
+
+        assert response.status_code == 422
+        assert response.json()["detail"][0]["type"] == "greater_than"
+        assert response.json()["detail"][0]["msg"] == "Input should be greater than 0"

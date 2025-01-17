@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from unittest.mock import AsyncMock
 
 from app.api.routers import projects
 from app.models import Project
@@ -171,3 +172,39 @@ class TestPatchProject:
             == f"Project name '{payload_request['name']}' already "
             "exists. Please select a unique project name and try again."
         )
+
+
+class TestDeleteProject:
+    def test_delete_project_deletes_project(self, test_app_without_db, monkeypatch):
+        async def mock_get_project_by_id(db_session, project_id):
+            return Project(
+                id=1,
+                name="test_name",
+                comment="test_comment",
+                created_at=datetime(2024, 12, 1).isoformat(),
+            )
+
+        monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
+
+        mock_remove_project = AsyncMock()
+        monkeypatch.setattr(projects, "remove_project", mock_remove_project)
+
+        response = test_app_without_db.delete("/projects/1/")
+
+        mock_remove_project.assert_called()
+        assert response.status_code == 200
+        assert response.json()["name"] == "test_name"
+        assert response.json()["comment"] == "test_comment"
+
+    def test_delete_project_cannot_delete_not_existent_project(
+        self, test_app_without_db, monkeypatch
+    ):
+        async def mock_get_project_by_id(db_session, project_id):
+            return None
+
+        monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
+
+        response = test_app_without_db.delete("/projects/1/")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found."

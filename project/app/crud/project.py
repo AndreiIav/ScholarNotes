@@ -46,3 +46,8 @@ async def update_project(
     )
     await db_session.execute(query)
     await db_session.commit()
+
+
+async def remove_project(project: ProjectDBModel, db_session: AsyncSession):
+    await db_session.delete(project)
+    await db_session.commit()

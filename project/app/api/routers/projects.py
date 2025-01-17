@@ -1,9 +1,12 @@
+from typing import Annotated
+
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import (
     get_all_projects,
     get_project_by_id,
     get_project_by_name,
     post_project,
+    remove_project,
     update_project,
 )
 from app.schemas.project import ProjectPayloadSchema, ProjectResponseSchema
@@ -73,5 +76,19 @@ async def patch_project(
             )
 
     await update_project(project_id, payload, db_session)
+
+    return project
+
+
+@router.delete("/{project_id}/", response_model=ProjectResponseSchema, status_code=200)
+async def delete_project(
+    db_session: DBSessionDep,
+    project_id: Annotated[int, Path(title="The ID of the item to delete", gt=0)],
+):
+    project = await get_project_by_id(db_session, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project id not found.")
+
+    await remove_project(project=project, db_session=db_session)
 
     return project
