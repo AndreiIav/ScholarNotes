@@ -21,7 +21,7 @@ router = APIRouter()
 )
 async def get_project(
     db_session: DBSessionDep,
-    project_id: int = Path(..., gt=0),
+    project_id: Annotated[int, Path(title="The ID of the item to get", gt=0)],
 ) -> ProjectResponseSchema:
     project = await get_project_by_id(db_session, project_id)
     if not project:
@@ -58,7 +58,7 @@ async def create_project(
 async def patch_project(
     payload: ProjectPayloadSchema,
     db_session: DBSessionDep,
-    project_id: int = Path(..., gt=0),
+    project_id: Annotated[int, Path(title="The ID of the item to update", gt=0)],
 ) -> ProjectResponseSchema:
     project = await get_project_by_id(db_session, project_id)
     if not project:
