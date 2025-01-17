@@ -99,7 +99,7 @@ class TestGetProject:
 
         monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
 
-        response = test_app_without_db.get(f"/projects/{test_id}")
+        response = test_app_without_db.get(f"/projects/{test_id}/")
 
         assert response.status_code == 200
         assert response.json() == test_data
@@ -114,7 +114,7 @@ class TestGetProject:
 
         monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
 
-        response = test_app_without_db.get("/projects/999")
+        response = test_app_without_db.get("/projects/999/")
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Project id not found."
@@ -135,7 +135,7 @@ class TestPatchProject:
         }
 
         response = test_app_without_db.patch(
-            "/projects/1", data=json.dumps(test_request_payload)
+            "/projects/1/", data=json.dumps(test_request_payload)
         )
 
         assert response.status_code == 404
@@ -162,7 +162,7 @@ class TestPatchProject:
         }
 
         response = test_app_without_db.patch(
-            "/projects/1", data=json.dumps(payload_request)
+            "/projects/1/", data=json.dumps(payload_request)
         )
 
         assert response.status_code == 400

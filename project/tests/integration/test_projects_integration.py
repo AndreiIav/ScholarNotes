@@ -47,7 +47,7 @@ class TestGetAllProjects:
 class TestGetProject:
     def test_get_project(self, test_app, add_project_data, delete_project_table_data):
         test_project_id = 1
-        response = test_app.get(f"/projects/{test_project_id}")
+        response = test_app.get(f"/projects/{test_project_id}/")
 
         assert response.status_code == 200
 
@@ -68,7 +68,7 @@ class TestPatchProject:
         }
 
         response = test_app.patch(
-            f"/projects/{test_project_id}", data=json.dumps(payload_request_data)
+            f"/projects/{test_project_id}/", data=json.dumps(payload_request_data)
         )
 
         assert response.status_code == 200
