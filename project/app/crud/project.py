@@ -44,7 +44,7 @@ async def get_all_projects(db_session: AsyncSession) -> list[ProjectDBModel] | N
 
 async def update_project(
     project_id: int, payload: ProjectPayloadSchema, db_session: AsyncSession
-) -> None:
+) -> ProjectDBModel:
     query = (
         update(ProjectDBModel)
         .where(ProjectDBModel.id == project_id)
