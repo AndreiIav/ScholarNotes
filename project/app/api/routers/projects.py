@@ -84,11 +84,11 @@ async def patch_project(
 async def delete_project(
     db_session: DBSessionDep,
     project_id: Annotated[int, Path(title="The ID of the item to delete", gt=0)],
-):
+) -> ProjectResponseSchema:
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found.")
 
-    await remove_project(project=project, db_session=db_session)
+    deleted_project = await remove_project(project_id=project_id, db_session=db_session)
 
-    return project
+    return deleted_project

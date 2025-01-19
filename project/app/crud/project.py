@@ -1,6 +1,6 @@
 from app.models import Project as ProjectDBModel
 from app.schemas.project import ProjectPayloadSchema
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -57,6 +57,13 @@ async def update_project(
     return result.one()
 
 
-async def remove_project(project: ProjectDBModel, db_session: AsyncSession) -> None:
-    await db_session.delete(project)
+async def remove_project(project_id: int, db_session: AsyncSession) -> ProjectDBModel:
+    query = (
+        delete(ProjectDBModel)
+        .where(ProjectDBModel.id == project_id)
+        .returning(ProjectDBModel)
+    )
+    result = await db_session.scalars(query)
     await db_session.commit()
+
+    return result.one()
