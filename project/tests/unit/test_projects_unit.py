@@ -122,6 +122,43 @@ class TestGetProject:
 
 
 class TestPatchProject:
+    def test_patch_project(self, test_app_without_db, monkeypatch):
+        test_request_payload = {"name": "updated_name", "comment": "updated_comment"}
+
+        class DummyProject:
+            id = 1
+            name = "test_name"
+            comment = "test_comment"
+            created_at = datetime(2024, 12, 1).isoformat()
+
+        async def mock_get_project_by_id(fake_db_session, fake_project_id):
+            dummy_project = DummyProject()
+            return dummy_project
+
+        monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
+
+        async def mock_get_project_by_name(fake_db_session, fake_project_id):
+            return None
+
+        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
+
+        async def mock_update_project(project_id, payload, db_session):
+            updated_dummy_project = DummyProject()
+            updated_dummy_project.name = test_request_payload["name"]
+            updated_dummy_project.comment = test_request_payload["comment"]
+            return updated_dummy_project
+
+        monkeypatch.setattr(projects, "update_project", mock_update_project)
+
+        res = test_app_without_db.patch(
+            "/projects/1/", data=json.dumps(test_request_payload)
+        )
+
+        assert res.status_code == 200
+        assert res.json()["id"] == 1
+        assert res.json()["name"] == test_request_payload["name"]
+        assert res.json()["comment"] == test_request_payload["comment"]
+
     def test_patch_project_cannot_update_not_existing_project(
         self, test_app_without_db, monkeypatch
     ):
@@ -145,10 +182,20 @@ class TestPatchProject:
     def test_patch_project_cannot_update_name_to_an_already_existing_one(
         self, test_app_without_db, monkeypatch
     ):
-        project = Project(name="test_project", comment="test_comment")
+        payload_request = {
+            "name": "updated_name",
+            "comment": "updated_comment",
+        }
+
+        class DummyProject:
+            id = 1
+            name = "test_name"
+            comment = "test_comment"
+            created_at = datetime(2024, 12, 1).isoformat()
 
         async def mock_get_project_by_id(db_session, project_id):
-            return project
+            dummy_project = DummyProject()
+            return dummy_project
 
         monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
 
@@ -156,11 +203,6 @@ class TestPatchProject:
             return True
 
         monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
-
-        payload_request = {
-            "name": "another_name",
-            "comment": "another_comment",
-        }
 
         response = test_app_without_db.patch(
             "/projects/1/", data=json.dumps(payload_request)

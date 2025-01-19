@@ -75,9 +75,9 @@ async def patch_project(
                 " Please select a unique project name and try again.",
             )
 
-    await update_project(project_id, payload, db_session)
+    updated_project = await update_project(project_id, payload, db_session)
 
-    return project
+    return updated_project
 
 
 @router.delete("/{project_id}/", response_model=ProjectResponseSchema, status_code=200)

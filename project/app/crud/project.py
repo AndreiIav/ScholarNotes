@@ -49,9 +49,12 @@ async def update_project(
         update(ProjectDBModel)
         .where(ProjectDBModel.id == project_id)
         .values(name=payload.name, comment=payload.comment)
+        .returning(ProjectDBModel)
     )
-    await db_session.execute(query)
+    result = await db_session.scalars(query)
     await db_session.commit()
+
+    return result.one()
 
 
 async def remove_project(project: ProjectDBModel, db_session: AsyncSession) -> None:
