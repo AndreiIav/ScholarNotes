@@ -9,7 +9,7 @@ async def get_project_by_id(
 ) -> ProjectDBModel | None:
     query = select(ProjectDBModel).where(ProjectDBModel.id == project_id)
     project = await db_session.scalars(query)
-    project = project.one_or_none()
+    project = project.unique().one_or_none()
 
     return project
 
@@ -39,7 +39,7 @@ async def get_all_projects(db_session: AsyncSession) -> list[ProjectDBModel] | N
     query = select(ProjectDBModel).order_by(ProjectDBModel.id)
     all_projects = await db_session.scalars(query)
 
-    return all_projects
+    return all_projects.unique()
 
 
 async def update_project(
@@ -54,7 +54,7 @@ async def update_project(
     result = await db_session.scalars(query)
     await db_session.commit()
 
-    return result.one()
+    return result.unique().one()
 
 
 async def remove_project(project_id: int, db_session: AsyncSession) -> ProjectDBModel:
@@ -66,4 +66,4 @@ async def remove_project(project_id: int, db_session: AsyncSession) -> ProjectDB
     result = await db_session.scalars(query)
     await db_session.commit()
 
-    return result.one()
+    return result.unique().one()
