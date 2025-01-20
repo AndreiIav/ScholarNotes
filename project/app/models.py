@@ -18,3 +18,6 @@ class Project(Base):
         nullable=False,
         default=datetime.now(timezone.utc),
     )
+
+    def __repr__(self):
+        return f"Project({self.id}, '{self.name}')"
