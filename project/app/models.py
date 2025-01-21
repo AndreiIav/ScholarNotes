@@ -1,10 +1,17 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import TIMESTAMP, ForeignKey, Text
+from sqlalchemy import TIMESTAMP, Column, ForeignKey, String, Table, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+NoteTag = Table(
+    "notes_tags",
+    Base.metadata,
+    Column("note_id", ForeignKey("notes.id"), primary_key=True, nullable=False),
+    Column("tag_id", ForeignKey("tags.id"), primary_key=True, nullable=False),
+)
 
 
 class Project(Base):
@@ -43,7 +50,6 @@ class Note(Base):
     publication_details: Mapped[Optional[str]]
     publication_year: Mapped[Optional[str]]
     comments: Mapped[Optional[str]]
-    tag: Mapped[Optional[int]]
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         nullable=False,
@@ -53,6 +59,23 @@ class Note(Base):
     project: Mapped["Project"] = relationship(
         lazy="joined", innerjoin=True, back_populates="notes"
     )
+    tags: Mapped[list["Tag"]] = relationship(
+        lazy="selectin", secondary=NoteTag, back_populates="notes"
+    )
 
     def __repr__(self):
         return f"Note({self.id}, '{self.name}')"
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), index=True, unique=True)
+
+    notes: Mapped[list["Note"]] = relationship(
+        lazy="selectin", secondary=NoteTag, back_populates="tags"
+    )
+
+    def __repr__(self):
+        return f"Tag({self.id}, '{self.name}')"
