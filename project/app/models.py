@@ -56,7 +56,7 @@ class Note(Base):
     name: Mapped[str] = mapped_column(index=True, nullable=False)
     author: Mapped[Optional[str]]
     publication_details: Mapped[Optional[str]]
-    publication_year: Mapped[Optional[str]]
+    publication_year: Mapped[Optional[int]]
     comments: Mapped[Optional[str]]
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
