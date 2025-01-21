@@ -1,7 +1,15 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import TIMESTAMP, Column, ForeignKey, String, Table, Text
+from sqlalchemy import (
+    TIMESTAMP,
+    Column,
+    ForeignKey,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -45,7 +53,7 @@ class Note(Base):
         ForeignKey("projects.id", ondelete="CASCADE"),
         index=True,
     )
-    name: Mapped[str] = mapped_column(index=True, unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(index=True, nullable=False)
     author: Mapped[Optional[str]]
     publication_details: Mapped[Optional[str]]
     publication_year: Mapped[Optional[str]]
@@ -62,6 +70,8 @@ class Note(Base):
     tags: Mapped[list["Tag"]] = relationship(
         lazy="selectin", secondary=NoteTag, back_populates="notes"
     )
+
+    UniqueConstraint(project_id, name)
 
     def __repr__(self):
         return f"Note({self.id}, '{self.name}')"
