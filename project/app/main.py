@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api.routers import ping, projects
+from app.api.routers import ping, project_notes, projects
 from app.database import sessionmanager
 
 log = logging.getLogger("uvicorn")
@@ -26,6 +26,11 @@ def create_application() -> FastAPI:
     application = FastAPI(lifespan=lifespan)
     application.include_router(ping.ping_router)
     application.include_router(projects.router, prefix="/projects", tags=["projects"])
+    application.include_router(
+        project_notes.router,
+        prefix="/projects/{project_id}/notes",
+        tags=["project_notes"],
+    )
 
     return application
 
