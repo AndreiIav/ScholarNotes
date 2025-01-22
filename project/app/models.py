@@ -17,8 +17,18 @@ from app.database import Base
 NoteTag = Table(
     "notes_tags",
     Base.metadata,
-    Column("note_id", ForeignKey("notes.id"), primary_key=True, nullable=False),
-    Column("tag_id", ForeignKey("tags.id"), primary_key=True, nullable=False),
+    Column(
+        "note_id",
+        ForeignKey("notes.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
+    Column(
+        "tag_id",
+        ForeignKey("tags.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    ),
 )
 
 
@@ -68,7 +78,10 @@ class Note(Base):
         lazy="joined", innerjoin=True, back_populates="notes"
     )
     tags: Mapped[list["Tag"]] = relationship(
-        lazy="selectin", secondary=NoteTag, back_populates="notes"
+        lazy="selectin",
+        secondary=NoteTag,
+        back_populates="notes",
+        cascade="all, delete",
     )
 
     UniqueConstraint(project_id, name)
@@ -84,7 +97,7 @@ class Tag(Base):
     name: Mapped[str] = mapped_column(String(32), index=True, unique=True)
 
     notes: Mapped[list["Note"]] = relationship(
-        lazy="selectin", secondary=NoteTag, back_populates="tags"
+        lazy="selectin", secondary=NoteTag, back_populates="tags", passive_deletes=True
     )
 
     def __repr__(self):
