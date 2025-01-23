@@ -156,3 +156,112 @@ class TestPostProjectNotes:
             f" project '{test_project_name}'. Please select a unique note"
             " name for this project."
         )
+
+
+class TestGetAllProjectNotes:
+    def test_get_all_project_notes_happy_flow(self, test_app_without_db, monkeypatch):
+        async def mock_get_project_by_id(session, project_id):
+            return True
+
+        monkeypatch.setattr(project_notes, "get_project_by_id", mock_get_project_by_id)
+
+        async def mock_get_all_notes_for_project(project_id, db_session):
+            class MockTag:
+                def __init__(self, name):
+                    self.name = name
+
+            tag_1 = MockTag(name="tag_1")
+            tag_2 = MockTag(name="tag_2")
+
+            class MockProjectNotes:
+                def __init__(
+                    self,
+                    id,
+                    project_id,
+                    name,
+                    author,
+                    publication_details,
+                    publication_year,
+                    comments,
+                    created_at,
+                    tags,
+                ):
+                    self.id = id
+                    self.project_id = project_id
+                    self.name = name
+                    self.author = author
+                    self.publication_details = publication_details
+                    self.publication_year = publication_year
+                    self.comments = comments
+                    self.created_at = created_at
+                    self.tags = tags
+
+            note_1 = MockProjectNotes(
+                id=1,
+                project_id=1,
+                name="name_1",
+                author="author_1",
+                publication_details="details_1",
+                publication_year=2000,
+                comments="comm_1",
+                created_at=datetime(2024, 12, 1).isoformat(),
+                tags=[],
+            )
+            note_2 = MockProjectNotes(
+                id=2,
+                project_id=1,
+                name="name_2",
+                author="author_2",
+                publication_details="details_2",
+                publication_year=2001,
+                comments="comm_2",
+                created_at=datetime(2024, 12, 1).isoformat(),
+                tags=[tag_1, tag_2],
+            )
+
+            return [note_1, note_2]
+
+        monkeypatch.setattr(
+            project_notes, "get_all_notes_for_project", mock_get_all_notes_for_project
+        )
+
+        response = test_app_without_db.get("projects/1/notes/")
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                "note_id": 1,
+                "project_id": 1,
+                "note_name": "name_1",
+                "note_author": "author_1",
+                "note_publication_details": "details_1",
+                "note_publication_year": 2000,
+                "note_comments": "comm_1",
+                "created_at": datetime(2024, 12, 1).isoformat(),
+                "note_tags": [],
+            },
+            {
+                "note_id": 2,
+                "project_id": 1,
+                "note_name": "name_2",
+                "note_author": "author_2",
+                "note_publication_details": "details_2",
+                "note_publication_year": 2001,
+                "note_comments": "comm_2",
+                "created_at": datetime(2024, 12, 1).isoformat(),
+                "note_tags": ["tag_1", "tag_2"],
+            },
+        ]
+
+    def test_get_all_project_notes_cannot_get_data_for_inexistent_project(
+        self, test_app_without_db, monkeypatch
+    ):
+        async def mock_get_project_by_id(session, project_id):
+            return False
+
+        monkeypatch.setattr(project_notes, "get_project_by_id", mock_get_project_by_id)
+
+        response = test_app_without_db.get("/projects/1/notes/")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found"
