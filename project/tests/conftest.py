@@ -7,7 +7,7 @@ from alembic import command, config
 from app.config import Settings, get_settings
 from app.database import DatabaseSessionManager, get_db_session
 from app.main import create_application
-from app.models import Project
+from app.models import Note, Project, Tag
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, insert
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -48,6 +48,25 @@ async def get_test_session_override():
         await session.close()
 
 
+@pytest.fixture(scope="module")
+def test_app():
+    app = create_application()
+    app.dependency_overrides[get_settings] = get_settings_override
+    app.dependency_overrides[get_db_session] = get_test_session_override
+    run_latest_migration()
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+@pytest.fixture(scope="module")
+def test_app_without_db():
+    app = create_application()
+    app.dependency_overrides[get_settings] = get_settings_override
+    app.dependency_overrides[get_db_session] = get_mock_session_override
+    with TestClient(app) as test_client:
+        yield test_client
+
+
 @pytest.fixture(scope="function")
 async def get_session():
     database_url = os.environ.get("DATABASE_TEST_URL")
@@ -55,14 +74,6 @@ async def get_session():
     async with sessionmanager.session() as session:
         yield session
         await session.close()
-
-
-@pytest.fixture(scope="function")
-async def delete_project_table_data(get_session):
-    yield
-    session = get_session
-    await session.execute(delete(Project))
-    await session.commit()
 
 
 @pytest.fixture(scope="function")
@@ -81,21 +92,58 @@ async def add_project_data(get_session):
     yield
 
 
-@pytest.fixture(scope="module")
-def test_app():
-    # set up
-    app = create_application()
-    app.dependency_overrides[get_settings] = get_settings_override
-    app.dependency_overrides[get_db_session] = get_test_session_override
-    run_latest_migration()
-    with TestClient(app) as test_client:
-        yield test_client
+@pytest.fixture(scope="function")
+async def delete_project_table_data(get_session):
+    yield
+    session = get_session
+    await session.execute(delete(Project))
+    await session.commit()
 
 
-@pytest.fixture(scope="module")
-def test_app_without_db():
-    app = create_application()
-    app.dependency_overrides[get_settings] = get_settings_override
-    app.dependency_overrides[get_db_session] = get_mock_session_override
-    with TestClient(app) as test_client:
-        yield test_client
+@pytest.fixture(scope="function")
+async def add_project_notes_data(get_session):
+    insert_project_1 = insert(Project).values(
+        id=1, name="project_1", comment="test_comment"
+    )
+    insert_project_note_1 = insert(Note).values(
+        id=1,
+        project_id=1,
+        name="note_1",
+        author="test_author",
+        publication_details="test_publication_details",
+        publication_year=1889,
+        comments="test comments",
+    )
+    session = get_session
+    await session.execute(insert_project_1)
+    await session.execute(insert_project_note_1)
+    await session.commit()
+    yield
+
+
+@pytest.fixture(scope="function")
+async def delete_project_notes_data(get_session):
+    yield
+    session = get_session
+    await session.execute(delete(Note))
+    await session.execute(delete(Project))
+    await session.commit()
+
+
+@pytest.fixture(scope="function")
+async def add_tags_data(get_session):
+    insert_tag_1 = insert(Tag).values(id=1, name="tag_1")
+    insert_tag_2 = insert(Tag).values(id=2, name="tag_2")
+    session = get_session
+    await session.execute(insert_tag_1)
+    await session.execute(insert_tag_2)
+    await session.commit()
+    yield
+
+
+@pytest.fixture(scope="function")
+async def delete_tags_data(get_session):
+    yield
+    session = get_session
+    await session.execute(delete(Tag))
+    await session.commit()
