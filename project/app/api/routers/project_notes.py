@@ -73,6 +73,9 @@ async def get_all_project_notes(
         int, Path(title="The ID of the project to get the notes for", gt=0)
     ],
 ) -> list[ProjectNoteResponseSchema]:
+    project = await get_project_by_id(db_session, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project id not found")
     all_project_notes = await get_all_notes_for_project(project_id, db_session)
 
     response = []
