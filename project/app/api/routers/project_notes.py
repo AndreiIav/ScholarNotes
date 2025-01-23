@@ -3,6 +3,7 @@ from typing import Annotated
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import get_project_by_id
 from app.crud.project_notes import (
+    get_all_notes_for_project,
     get_note_by_name_and_project,
     get_tags_to_be_inserted,
     insert_note,
@@ -61,5 +62,33 @@ async def add_note_to_project(
         "created_at": note.created_at,
         "note_tags": [tag.name for tag in note.tags],
     }
+
+    return response
+
+
+@router.get("/", response_model=list[ProjectNoteResponseSchema], status_code=200)
+async def get_all_project_notes(
+    db_session: DBSessionDep,
+    project_id: Annotated[
+        int, Path(title="The ID of the project to get the notes for", gt=0)
+    ],
+) -> list[ProjectNoteResponseSchema]:
+    all_project_notes = await get_all_notes_for_project(project_id, db_session)
+
+    response = []
+
+    for project_note in all_project_notes:
+        note_response = {
+            "note_id": project_note.id,
+            "project_id": project_note.project_id,
+            "note_name": project_note.name,
+            "note_author": project_note.author,
+            "note_publication_details": project_note.publication_details,
+            "note_publication_year": project_note.publication_year,
+            "note_comments": project_note.comments,
+            "created_at": project_note.created_at,
+            "note_tags": [tag.name for tag in project_note.tags],
+        }
+        response.append(note_response)
 
     return response

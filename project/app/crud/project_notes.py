@@ -18,6 +18,14 @@ async def get_note_by_name_and_project(
     return note
 
 
+async def get_all_notes_for_project(project_id: int, db_session: AsyncSession):
+    query = select(Note).where(Note.project_id == project_id)
+    all_project_notes = await db_session.scalars(query)
+    result = all_project_notes.unique().all()
+
+    return result
+
+
 async def insert_note(
     payload: ProjectNotePayloadSchema, project_id: int, db_session: AsyncSession
 ) -> Note:
