@@ -158,3 +158,47 @@ class TestPostProjectNotes:
         assert len(response.json()["note_tags"]) == 4
         for tag in test_request_payload["note_tags"]:
             assert tag in response.json()["note_tags"]
+
+
+class TestGetAllProjectNotes:
+    def test_get_all_project_notes_happy_path(
+        self, test_app, add_project_notes_data, delete_project_notes_data
+    ):
+        test_project_id = 1
+        expected_response = [
+            {
+                "note_id": 1,
+                "project_id": test_project_id,
+                "note_name": "note_1",
+                "note_author": "test_author",
+                "note_publication_details": "test_publication_details",
+                "note_publication_year": 1889,
+                "note_comments": "test_comments",
+                "created_at": "2024-12-01T00:00:00Z",
+                "note_tags": [],
+            },
+            {
+                "note_id": 2,
+                "project_id": test_project_id,
+                "note_name": "note_2",
+                "note_author": "test_author_2",
+                "note_publication_details": "test_publication_details_2",
+                "note_publication_year": 1989,
+                "note_comments": "test_comments",
+                "created_at": "2024-12-01T00:00:00Z",
+                "note_tags": [],
+            },
+        ]
+
+        response = test_app.get(f"/projects/{test_project_id}/notes")
+
+        assert response.status_code == 200
+        assert response.json() == expected_response
+
+    def test_get_all_project_notes_cannot_get_data_for_inexistent_project(
+        self, test_app, add_project_notes_data, delete_project_notes_data
+    ):
+        response = test_app.get("/projects/2/notes")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found"
