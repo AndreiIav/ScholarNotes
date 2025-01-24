@@ -43,13 +43,13 @@ class TestPostProjectNotes:
         monkeypatch.setattr(project_notes, "insert_tags", mock_insert_tags)
 
         async def mock_insert_note(payload, project_id, db_session):
-            class Tag1:
-                name = test_request_payload["note_tags"][0]
+            class MockTag:
+                def __init__(self, name):
+                    self.name = name
 
-            class Tag2:
-                name = test_request_payload["note_tags"][1]
+            tag_1 = MockTag(name="tag_1")
+            tag_2 = MockTag(name="tag_2")
 
-            tag_1, tag_2 = Tag1(), Tag2()
             all_tags = [tag_1, tag_2]
 
             class Note:
