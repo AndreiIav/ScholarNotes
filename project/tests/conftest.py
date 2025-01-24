@@ -1,5 +1,6 @@
 import asyncio
 import os
+from datetime import datetime
 from unittest.mock import AsyncMock
 
 import pytest
@@ -112,11 +113,24 @@ async def add_project_notes_data(get_session):
         author="test_author",
         publication_details="test_publication_details",
         publication_year=1889,
-        comments="test comments",
+        comments="test_comments",
+        created_at=datetime(2024, 12, 1),
     )
+    insert_project_note_2 = insert(Note).values(
+        id=2,
+        project_id=1,
+        name="note_2",
+        author="test_author_2",
+        publication_details="test_publication_details_2",
+        publication_year=1989,
+        comments="test_comments",
+        created_at=datetime(2024, 12, 1),
+    )
+
     session = get_session
     await session.execute(insert_project_1)
     await session.execute(insert_project_note_1)
+    await session.execute(insert_project_note_2)
     await session.commit()
     yield
 
