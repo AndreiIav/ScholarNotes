@@ -60,7 +60,11 @@ class TestPostProjectNotes:
         assert response.json()["detail"] == "Project id not found"
 
     def test_post_project_notes_cannot_add_existing_note_name_for_same_project(
-        self, test_app, add_project_notes_data, delete_project_notes_data
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
     ):
         test_request_payload = {
             "note_name": "note_1",
@@ -95,7 +99,7 @@ class TestPostProjectNotes:
             "note_publication_details": "test_publication_details",
             "note_publication_year": 1889,
             "note_comments": "test_comments",
-            "note_tags": ["tag_1", "tag_2"],
+            "note_tags": ["tag_1111", "tag_2222"],
         }
 
         response = test_app.post(
@@ -147,7 +151,7 @@ class TestPostProjectNotes:
             "note_publication_details": "test_publication_details",
             "note_publication_year": 1889,
             "note_comments": "test_comments",
-            "note_tags": ["tag_1", "tag_2", "tag_3", "tag_4"],
+            "note_tags": ["tag_3", "tag_4", "tag_3333", "tag_44444"],
         }
 
         response = test_app.post(
@@ -162,7 +166,11 @@ class TestPostProjectNotes:
 
 class TestGetAllProjectNotes:
     def test_get_all_project_notes_happy_path(
-        self, test_app, add_project_notes_data, delete_project_notes_data
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
     ):
         test_project_id = 1
         expected_response = [
@@ -175,7 +183,7 @@ class TestGetAllProjectNotes:
                 "note_publication_year": 1889,
                 "note_comments": "test_comments",
                 "created_at": "2024-12-01T00:00:00Z",
-                "note_tags": [],
+                "note_tags": ["tag_1", "tag_2"],
             },
             {
                 "note_id": 2,

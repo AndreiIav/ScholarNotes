@@ -103,6 +103,20 @@ async def delete_project_table_data(get_session):
 
 @pytest.fixture(scope="function")
 async def add_project_notes_data(get_session):
+    """
+    Inserts data in multiple tables so it can be used for multiple project_notes
+    test scenarios:
+      - one row in projects table:
+            id=1, name='project_1'
+      - two rows in notes table:
+            id=1, project_id=1, name='note_1'
+            id=2, project_id=1, name='note_2'
+      - two rows in tags table (the tags are linked to notes.id=1):
+            id=1, name='tag_1'
+            id=2, name='tag_2'
+    In order to clean_up the data use the following fixtures:
+    'delete_project_notes_data', 'delete_tags_data'.
+    """
     insert_project_1 = insert(Project).values(
         id=1, name="project_1", comment="test_comment"
     )
@@ -126,17 +140,39 @@ async def add_project_notes_data(get_session):
         comments="test_comments",
         created_at=datetime(2024, 12, 1),
     )
+    insert_tag_1 = insert(Tag).values(id=1, name="tag_1")
+    insert_tag_2 = insert(Tag).values(id=2, name="tag_2")
 
     session = get_session
+
+    # insert project and note
     await session.execute(insert_project_1)
     await session.execute(insert_project_note_1)
     await session.execute(insert_project_note_2)
     await session.commit()
+
+    # insert tags
+    await session.execute(insert_tag_1)
+    await session.execute(insert_tag_2)
+    await session.commit()
+
+    # link tags to a note
+    note_1 = await session.get(Note, 1)
+    tag_1 = await session.get(Tag, 1)
+    tag_2 = await session.get(Tag, 2)
+    note_1.tags.extend([tag_1, tag_2])
+    await session.commit()
+
     yield
 
 
 @pytest.fixture(scope="function")
 async def delete_project_notes_data(get_session):
+    """
+    Deletes all the data from the following tables:
+    - projects
+    - notes
+    """
     yield
     session = get_session
     await session.execute(delete(Note))
@@ -146,8 +182,8 @@ async def delete_project_notes_data(get_session):
 
 @pytest.fixture(scope="function")
 async def add_tags_data(get_session):
-    insert_tag_1 = insert(Tag).values(id=1, name="tag_1")
-    insert_tag_2 = insert(Tag).values(id=2, name="tag_2")
+    insert_tag_1 = insert(Tag).values(id=3, name="tag_3")
+    insert_tag_2 = insert(Tag).values(id=4, name="tag_4")
     session = get_session
     await session.execute(insert_tag_1)
     await session.execute(insert_tag_2)
