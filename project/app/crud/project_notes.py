@@ -79,3 +79,11 @@ async def get_tags_by_name(tags: list[str], db_session: AsyncSession):
     result = result.all()
 
     return result
+
+
+async def get_note_by_id(note_id: int, db_session: AsyncSession):
+    query = select(Note).where(Note.id == note_id)
+    result = await db_session.scalars(query)
+    result = result.unique().one_or_none()
+
+    return result

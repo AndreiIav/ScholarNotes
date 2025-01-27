@@ -4,6 +4,7 @@ from app.api.dependencies.core import DBSessionDep
 from app.crud.project import get_project_by_id
 from app.crud.project_notes import (
     get_all_notes_for_project,
+    get_note_by_id,
     get_note_by_name_and_project,
     get_tags_to_be_inserted,
     insert_note,
@@ -95,3 +96,34 @@ async def get_all_project_notes(
         response.append(note_response)
 
     return response
+
+
+@router.get("/{note_id}")
+async def get_project_note(
+    db_session: DBSessionDep,
+    project_id: Annotated[
+        int, Path(title="The ID of the project to get the note for", gt=0)
+    ],
+    note_id: Annotated[int, Path(title="The ID of the note to get", gt=0)],
+) -> ProjectNoteResponseSchema:
+    project = await get_project_by_id(db_session, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project id not found")
+
+    note = await get_note_by_id(note_id=note_id, db_session=db_session)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note id not found")
+
+    note_response = {
+        "note_id": note.id,
+        "project_id": note.project_id,
+        "note_name": note.name,
+        "note_author": note.author,
+        "note_publication_details": note.publication_details,
+        "note_publication_year": note.publication_year,
+        "note_comments": note.comments,
+        "created_at": note.created_at,
+        "note_tags": [tag.name for tag in note.tags],
+    }
+
+    return note_response
