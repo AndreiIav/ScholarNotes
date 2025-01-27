@@ -204,9 +204,55 @@ class TestGetAllProjectNotes:
         assert response.json() == expected_response
 
     def test_get_all_project_notes_cannot_get_data_for_inexistent_project(
-        self, test_app, add_project_notes_data, delete_project_notes_data
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
     ):
         response = test_app.get("/projects/2/notes")
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Project id not found"
+
+
+class TestGetProjectNote:
+    def test_get_project_note_happy_path(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        test_project_id = 1
+        test_note_id = 1
+        expected_response = {
+            "note_id": test_note_id,
+            "project_id": test_project_id,
+            "note_name": "note_1",
+            "note_author": "test_author",
+            "note_publication_details": "test_publication_details",
+            "note_publication_year": 1889,
+            "note_comments": "test_comments",
+            "created_at": "2024-12-01T00:00:00Z",
+            "note_tags": ["tag_1", "tag_2"],
+        }
+
+        response = test_app.get(f"/projects/{test_project_id}/notes/{test_note_id}/")
+
+        assert response.status_code == 200
+        assert response.json() == expected_response
+
+    def test_get_project_note_cannot_get_note_for_not_existent_project(self, test_app):
+        response = test_app.get("/projects/999/notes/1/")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found"
+
+    def test_get_project_note_cannot_get_note_for_not_existent_note(
+        self, test_app, add_project_data, delete_project_table_data
+    ):
+        response = test_app.get("/projects/1/notes/1/")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Note id not found"
