@@ -98,7 +98,7 @@ async def get_all_project_notes(
     return response
 
 
-@router.get("/{note_id}")
+@router.get("/{note_id}/")
 async def get_project_note(
     db_session: DBSessionDep,
     project_id: Annotated[
