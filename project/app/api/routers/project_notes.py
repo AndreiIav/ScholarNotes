@@ -9,10 +9,12 @@ from app.crud.project_notes import (
     get_tags_to_be_inserted,
     insert_note,
     insert_tags,
+    update_note,
 )
 from app.schemas.project_notes import (
     ProjectNotePayloadSchema,
     ProjectNoteResponseSchema,
+    ProjectNoteUpdateSchema,
 )
 from fastapi import APIRouter, HTTPException, Path
 
@@ -127,3 +129,60 @@ async def get_project_note(
     }
 
     return note_response
+
+
+@router.patch("/{note_id}/")
+async def patch_note(
+    payload: ProjectNoteUpdateSchema,
+    db_session: DBSessionDep,
+    project_id: Annotated[
+        int, Path(title="The ID of the project to update the note for", gt=0)
+    ],
+    note_id: Annotated[int, Path(title="The ID of the note to update", gt=0)],
+) -> ProjectNoteResponseSchema:
+    project = await get_project_by_id(db_session, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project id not found")
+
+    note = await get_note_by_id(note_id=note_id, db_session=db_session)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note id not found")
+
+    # check if the requested note belongs to the requested project_id
+    if note.project_id != project_id:
+        raise HTTPException(
+            status_code=404, detail="The note id cannot be found for this project."
+        )
+
+    # check if the note name is requested to be updated
+    if note.name != payload.name:
+        # check if the updated name already exists on the project
+        note_updated_name = await get_note_by_name_and_project(
+            note_name=payload.name, project_id=project_id, db_session=db_session
+        )
+        if note_updated_name:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Note name '{payload.name}' already exists on "
+                f"{project.name} project. Please select a unique note name and "
+                "try again.",
+            )
+
+    # TODO handle tags
+
+    update_data = payload.model_dump(exclude_unset=True)
+    updated_note = await update_note(
+        payload=update_data, note_id=note_id, db_session=db_session
+    )
+
+    return {
+        "note_id": updated_note.id,
+        "project_id": updated_note.project_id,
+        "note_name": updated_note.name,
+        "note_author": updated_note.author,
+        "note_publication_details": updated_note.publication_details,
+        "note_publication_year": updated_note.publication_year,
+        "note_comments": updated_note.comments,
+        "created_at": updated_note.created_at,
+        "note_tags": [tag.name for tag in updated_note.tags],
+    }

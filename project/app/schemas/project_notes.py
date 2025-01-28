@@ -22,3 +22,11 @@ class ProjectNoteResponseSchema(BaseModel):
     note_comments: str | None = None
     created_at: datetime
     note_tags: list[str] = []
+
+
+class ProjectNoteUpdateSchema(BaseModel, extra="forbid"):
+    name: str | None = None
+    author: str | None = None
+    publication_details: str | None = None
+    publication_year: int | None = None
+    comments: str | None = None

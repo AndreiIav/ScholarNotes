@@ -1,6 +1,8 @@
+from typing import Any
+
 from app.models import Note, Project, Tag
 from app.schemas.project_notes import ProjectNotePayloadSchema
-from sqlalchemy import Row, and_, select
+from sqlalchemy import Row, and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -87,3 +89,13 @@ async def get_note_by_id(note_id: int, db_session: AsyncSession):
     result = result.unique().one_or_none()
 
     return result
+
+
+async def update_note(
+    payload: dict[str, Any], note_id: int, db_session: AsyncSession
+) -> Note:
+    query = update(Note).where(Note.id == note_id).values(payload).returning(Note)
+    result = await db_session.scalars(query)
+    await db_session.commit()
+
+    return result.unique().one()
