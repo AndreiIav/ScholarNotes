@@ -44,11 +44,9 @@ async def insert_note(
     await db_session.refresh(new_note)
 
     if payload.note_tags:
-        tags: list[Tag] = await get_tags_by_name(payload.note_tags, db_session)
-        new_note.tags.extend(tags)
-
-        await db_session.commit()
-        await db_session.refresh(new_note)
+        await add_tags_to_note(
+            tags=payload.note_tags, note=new_note, db_session=db_session
+        )
 
     return new_note
 
@@ -75,7 +73,7 @@ async def insert_tags(tags: list[str], db_session: AsyncSession) -> None:
     await db_session.commit()
 
 
-async def get_tags_by_name(tags: list[str], db_session: AsyncSession):
+async def get_tags_by_name(tags: list[str], db_session: AsyncSession) -> list[Tag]:
     query = select(Tag).where(Tag.name.in_(tags))
     result = await db_session.scalars(query)
     result = result.all()
@@ -99,3 +97,11 @@ async def update_note(
     await db_session.commit()
 
     return result.unique().one()
+
+
+async def add_tags_to_note(tags: list[Tag], note: Note, db_session: AsyncSession):
+    tags = await get_tags_by_name(tags=tags, db_session=db_session)
+    note.tags.extend(tags)
+
+    await db_session.commit()
+    await db_session.refresh(note)
