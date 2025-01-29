@@ -3,12 +3,14 @@ from typing import Annotated
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import get_project_by_id
 from app.crud.project_notes import (
+    add_tags_to_note,
     get_all_notes_for_project,
     get_note_by_id,
     get_note_by_name_and_project,
     get_tags_to_be_inserted,
     insert_note,
     insert_tags,
+    remove_tags_from_note,
     update_note,
 )
 from app.schemas.project_notes import (
@@ -140,7 +142,7 @@ async def patch_note(
     ],
     note_id: Annotated[int, Path(title="The ID of the note to update", gt=0)],
 ) -> ProjectNoteResponseSchema:
-    project = await get_project_by_id(db_session, project_id)
+    project = await get_project_by_id(db_session=db_session, project_id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found")
 
@@ -168,12 +170,39 @@ async def patch_note(
                 "try again.",
             )
 
-    # TODO handle tags
+    # handle updating tags data
+    existing_note_tags = set([tag.name for tag in note.tags])
+    payload_tags = set(payload.tags)
+    tags_to_be_removed = existing_note_tags - payload_tags
+    if tags_to_be_removed:
+        await remove_tags_from_note(
+            tags=tags_to_be_removed, note=note, db_session=db_session
+        )
+    tags_to_be_added = payload_tags - existing_note_tags
+    if tags_to_be_added:
+        # check if the tags already exist, and if not insert them
+        tags_to_be_inserted = await get_tags_to_be_inserted(
+            tags=tags_to_be_added, db_session=db_session
+        )
+        if tags_to_be_inserted:
+            await insert_tags(tags_to_be_inserted, db_session)
+        await add_tags_to_note(tags=tags_to_be_added, note=note, db_session=db_session)
 
     update_data = payload.model_dump(exclude_unset=True)
-    updated_note = await update_note(
-        payload=update_data, note_id=note_id, db_session=db_session
-    )
+
+    # updating tags is handled separately
+    if "tags" in update_data.keys():
+        update_data.pop("tags")
+
+    # at this point update_data may be an empty dict if only "tags" were sent
+    # in the payload; in this case we don't need to perform any update in
+    # "notes" table
+    if update_data:
+        updated_note = await update_note(
+            payload=update_data, note_id=note_id, db_session=db_session
+        )
+    else:
+        updated_note = await get_note_by_id(note_id=note_id, db_session=db_session)
 
     return {
         "note_id": updated_note.id,

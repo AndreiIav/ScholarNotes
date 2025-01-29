@@ -30,3 +30,4 @@ class ProjectNoteUpdateSchema(BaseModel, extra="forbid"):
     publication_details: str | None = None
     publication_year: int | None = None
     comments: str | None = None
+    tags: list[str] = []

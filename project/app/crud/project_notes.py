@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Iterable
 
 from app.models import Note, Project, Tag
 from app.schemas.project_notes import ProjectNotePayloadSchema
@@ -73,7 +73,7 @@ async def insert_tags(tags: list[str], db_session: AsyncSession) -> None:
     await db_session.commit()
 
 
-async def get_tags_by_name(tags: list[str], db_session: AsyncSession) -> list[Tag]:
+async def get_tags_by_name(tags: Iterable[str], db_session: AsyncSession) -> list[Tag]:
     query = select(Tag).where(Tag.name.in_(tags))
     result = await db_session.scalars(query)
     result = result.all()
@@ -99,9 +99,24 @@ async def update_note(
     return result.unique().one()
 
 
-async def add_tags_to_note(tags: list[Tag], note: Note, db_session: AsyncSession):
-    tags = await get_tags_by_name(tags=tags, db_session=db_session)
-    note.tags.extend(tags)
+async def add_tags_to_note(tags: Iterable[str], note: Note, db_session: AsyncSession):
+    tags_to_be_added: list[Tag] = await get_tags_by_name(
+        tags=tags, db_session=db_session
+    )
+    note.tags.extend(tags_to_be_added)
+
+    await db_session.commit()
+    await db_session.refresh(note)
+
+
+async def remove_tags_from_note(
+    tags: Iterable[str], note: Note, db_session: AsyncSession
+) -> None:
+    tags_to_be_removed: list[Tag] = await get_tags_by_name(
+        tags=tags, db_session=db_session
+    )
+    for tag in tags_to_be_removed:
+        note.tags.remove(tag)
 
     await db_session.commit()
     await db_session.refresh(note)
