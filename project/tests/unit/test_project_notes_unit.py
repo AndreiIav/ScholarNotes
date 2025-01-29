@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from unittest.mock import ANY, AsyncMock
 
 from app.api.routers import project_notes
 
@@ -30,17 +31,11 @@ class TestPostProjectNotes:
             mock_get_note_by_name_and_project,
         )
 
-        async def mock_get_tags_to_be_inserted(tags, db_session):
-            return ["tag_1", "tag_2"]
+        mock_insert_missing_tags = AsyncMock()
 
         monkeypatch.setattr(
-            project_notes, "get_tags_to_be_inserted", mock_get_tags_to_be_inserted
+            project_notes, "insert_missing_tags", mock_insert_missing_tags
         )
-
-        async def mock_insert_tags(tags, db_session):
-            return None
-
-        monkeypatch.setattr(project_notes, "insert_tags", mock_insert_tags)
 
         async def mock_insert_note(payload, project_id, db_session):
             class MockTag:
@@ -72,6 +67,12 @@ class TestPostProjectNotes:
             f"/projects/{test_project_id}/notes/", data=json.dumps(test_request_payload)
         )
 
+        # assert that function with no return value was called correctly
+        mock_insert_missing_tags.assert_called_once_with(
+            tags=test_request_payload["note_tags"], db_session=ANY
+        )
+
+        # assert response
         assert response.status_code == 200
         assert response.json()["note_id"] == 1
         assert response.json()["project_id"] == test_project_id

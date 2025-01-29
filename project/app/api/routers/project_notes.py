@@ -18,6 +18,7 @@ from app.schemas.project_notes import (
     ProjectNoteResponseSchema,
     ProjectNoteUpdateSchema,
 )
+from app.services import insert_missing_tags
 from fastapi import APIRouter, HTTPException, Path
 
 router = APIRouter()
@@ -45,14 +46,8 @@ async def add_note_to_project(
             " name for this project.",
         )
 
-    # if the payload.note_tags is not an empty list, check if the tags from
-    # note_tags already exists and if not, insert them
     if payload.note_tags:
-        tags_to_be_inserted: list[str] = await get_tags_to_be_inserted(
-            tags=payload.note_tags, db_session=db_session
-        )
-        if tags_to_be_inserted:
-            await insert_tags(tags_to_be_inserted, db_session)
+        await insert_missing_tags(tags=payload.note_tags, db_session=db_session)
 
     note = await insert_note(payload, project_id, db_session)
 
