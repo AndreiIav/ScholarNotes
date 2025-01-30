@@ -106,9 +106,10 @@ async def add_project_notes_data(get_session):
     """
     Inserts data in multiple tables so it can be used for multiple project_notes
     test scenarios:
-      - one row in projects table:
+      - two rows in projects table:
             id=1, name='project_1'
-      - two rows in notes table:
+            id=2, name='project_2'
+      - two rows in notes table (the notes are linked to projects.id=1):
             id=1, project_id=1, name='note_1'
             id=2, project_id=1, name='note_2'
       - two rows in tags table (the tags are linked to notes.id=1):
@@ -119,6 +120,9 @@ async def add_project_notes_data(get_session):
     """
     insert_project_1 = insert(Project).values(
         id=1, name="project_1", comment="test_comment"
+    )
+    insert_project_2 = insert(Project).values(
+        id=2, name="project_2", comment="test_comment_2"
     )
     insert_project_note_1 = insert(Note).values(
         id=1,
@@ -147,6 +151,7 @@ async def add_project_notes_data(get_session):
 
     # insert project and note
     await session.execute(insert_project_1)
+    await session.execute(insert_project_2)
     await session.execute(insert_project_note_1)
     await session.execute(insert_project_note_2)
     await session.commit()
