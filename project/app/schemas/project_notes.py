@@ -31,3 +31,7 @@ class ProjectNoteUpdateSchema(BaseModel, extra="forbid"):
     publication_year: int | None = None
     comments: str | None = None
     tags: list[str] = []
+
+
+class ProjectNoteDeleteResponseSchema(BaseModel):
+    message: str
