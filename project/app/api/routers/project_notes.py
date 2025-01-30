@@ -157,20 +157,21 @@ async def patch_note(
             raise HTTPException(
                 status_code=400,
                 detail=f"Note name '{payload.name}' already exists on "
-                f"{project.name} project. Please select a unique note name and "
+                f"'{project.name}' project. Please select a unique note name and "
                 "try again.",
             )
 
-    # handle updating tags data
-    existing_note_tags = [tag.name for tag in note.tags]
-    await handle_note_tags_update(
-        note=note,
-        existing_note_tags=existing_note_tags,
-        payload_tags=payload.tags,
-        db_session=db_session,
-    )
-
     update_data = payload.model_dump(exclude_unset=True)
+
+    # handle updating tags data
+    if "tags" in update_data.keys():
+        existing_note_tags = [tag.name for tag in note.tags]
+        await handle_note_tags_update(
+            note=note,
+            existing_note_tags=existing_note_tags,
+            payload_tags=payload.tags,
+            db_session=db_session,
+        )
 
     # updating tags is handled separately
     if "tags" in update_data.keys():
