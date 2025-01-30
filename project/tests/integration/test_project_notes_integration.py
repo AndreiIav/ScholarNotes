@@ -210,7 +210,7 @@ class TestGetAllProjectNotes:
         delete_project_notes_data,
         delete_tags_data,
     ):
-        response = test_app.get("/projects/2/notes")
+        response = test_app.get("/projects/999/notes")
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Project id not found"
@@ -256,3 +256,128 @@ class TestGetProjectNote:
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Note id not found"
+
+
+class TestPatchProjectNote:
+    def test_patch_note_happy_path(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        test_request_payload = {
+            "name": "updated_test_note_name",
+            "author": "updated_test_author",
+            "publication_details": "updated_test_publication_details",
+            "publication_year": 1889,
+            "comments": "test_comments",
+            "tags": ["tag_2", "tag_3"],
+        }
+
+        response = test_app.patch(
+            "/projects/1/notes/1", data=json.dumps(test_request_payload)
+        )
+
+        assert response.status_code == 200
+        assert response.json()["note_id"] == 1
+        assert response.json()["project_id"] == 1
+        assert response.json()["note_name"] == test_request_payload["name"]
+        assert response.json()["note_author"] == test_request_payload["author"]
+        assert (
+            response.json()["note_publication_details"]
+            == test_request_payload["publication_details"]
+        )
+        assert (
+            response.json()["note_publication_year"]
+            == test_request_payload["publication_year"]
+        )
+        assert response.json()["note_comments"] == test_request_payload["comments"]
+        assert response.json()["created_at"]
+        assert response.json()["note_tags"] == test_request_payload["tags"]
+
+    def test_patch_note_only_tags_received_happy_path(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        test_request_payload = {"tags": ["tags_2", "tags_3"]}
+
+        response = test_app.patch(
+            "/projects/1/notes/1", data=json.dumps(test_request_payload)
+        )
+
+        assert response.status_code == 200
+        assert response.json()["note_id"] == 1
+        assert response.json()["project_id"] == 1
+        assert response.json()["note_name"] == "note_1"
+        assert response.json()["note_author"] == "test_author"
+        assert response.json()["note_publication_details"] == "test_publication_details"
+        assert response.json()["note_publication_year"] == 1889
+        assert response.json()["note_comments"] == "test_comments"
+        assert response.json()["created_at"]
+        assert (
+            response.json()["note_tags"].sort() == test_request_payload["tags"].sort()
+        )
+
+    def test_patch_note_not_patching_if_project_does_not_exist(self, test_app):
+        test_request_payload = {"name": "test_name"}
+
+        response = test_app.patch(
+            "/projects/999/notes/1", data=json.dumps(test_request_payload)
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found"
+
+    def test_patch_note_not_patching_if_note_does_not_exist(
+        self, test_app, add_project_data, delete_project_table_data
+    ):
+        test_request_payload = {"name": "test_name"}
+
+        response = test_app.patch(
+            "/projects/1/notes/999", data=json.dumps(test_request_payload)
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Note id not found"
+
+    def test_patch_note_not_patching_if_note_does_not_belong_to_project(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        test_request_payload = {"name": "test_name"}
+
+        response = test_app.patch(
+            "/projects/2/notes/1", data=json.dumps(test_request_payload)
+        )
+
+        assert response.status_code == 404
+        assert (
+            response.json()["detail"] == "The note id cannot be found for this project."
+        )
+
+    def test_patch_note_not_patching_note_name_if_it_already_exists_on_the_project(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        test_request_payload = {"name": "note_2"}
+
+        response = test_app.patch(
+            "/projects/1/notes/1", data=json.dumps(test_request_payload)
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == (
+            "Note name 'note_2' already exists on "
+            "'project_1' project. Please select a unique note name and "
+            "try again."
+        )
