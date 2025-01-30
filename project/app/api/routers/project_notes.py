@@ -109,6 +109,12 @@ async def get_project_note(
     if not note:
         raise HTTPException(status_code=404, detail="Note id not found")
 
+    # check if the requested note belongs to the requested project_id
+    if note.project_id != project_id:
+        raise HTTPException(
+            status_code=404, detail="The note id cannot be found for this project."
+        )
+
     note_response = {
         "note_id": note.id,
         "project_id": note.project_id,

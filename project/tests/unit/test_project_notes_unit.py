@@ -357,6 +357,30 @@ class TestGetProjectNote:
         assert response.status_code == 404
         assert response.json()["detail"] == "Note id not found"
 
+    def test_get_project_note_cannot_get_note_if_it_is_not_on_project(
+        self, test_app_without_db, monkeypatch
+    ):
+        async def mock_get_project_by_id(db_session, project_id):
+            return True
+
+        monkeypatch.setattr(project_notes, "get_project_by_id", mock_get_project_by_id)
+
+        async def mock_get_note_by_id(note_id, db_session):
+            class MockNote:
+                project_id = 999
+
+            mock_note = MockNote()
+            return mock_note
+
+        monkeypatch.setattr(project_notes, "get_note_by_id", mock_get_note_by_id)
+
+        response = test_app_without_db.get("/projects/1/notes/1")
+
+        assert response.status_code == 404
+        assert (
+            response.json()["detail"] == "The note id cannot be found for this project."
+        )
+
 
 class TestPatchProjectNote:
     def test_patch_note_happy_path(self, test_app_without_db, monkeypatch):

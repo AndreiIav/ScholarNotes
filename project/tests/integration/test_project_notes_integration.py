@@ -245,6 +245,20 @@ class TestGetProjectNote:
         assert response.status_code == 404
         assert response.json()["detail"] == "Note id not found"
 
+    def test_get_project_note_cannot_get_note_if_it_is_not_on_project(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        response = test_app.get("/projects/2/notes/1/")
+
+        assert response.status_code == 404
+        assert (
+            response.json()["detail"] == "The note id cannot be found for this project."
+        )
+
 
 class TestPatchProjectNote:
     def test_patch_note_happy_path(
