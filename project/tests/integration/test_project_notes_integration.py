@@ -383,3 +383,55 @@ class TestPatchProjectNote:
             "'project_1' project. Please select a unique note name and "
             "try again."
         )
+
+
+class TestDeleteProjectNote:
+    def test_delete_project_note_happy_path(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        response = test_app.delete("/projects/1/notes/1")
+
+        assert response.status_code == 200
+        assert response.json()["message"] == "Note deleted"
+
+    def test_delete_note_does_not_delete_if_project_does_not_exist(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        response = test_app.delete("/projects/999/notes/1")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found"
+
+    def test_delete_note_does_not_delete_if_it_does_not_exist(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        response = test_app.delete("/projects/1/notes/999")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Note id not found"
+
+    def test_delete_note_does_not_delete_if_note_does_not_belong_to_project(
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
+    ):
+        response = test_app.delete("/projects/2/notes/1")
+
+        assert response.status_code == 404
+        assert (
+            response.json()["detail"] == "The note id cannot be found for this project."
+        )

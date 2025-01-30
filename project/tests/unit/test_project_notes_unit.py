@@ -667,3 +667,88 @@ class TestPatchProjectNote:
             "'project_1' project. Please select a unique note name and "
             "try again."
         )
+
+
+class TestDeleteProjectNote:
+    def test_delete_project_note_happy_path(self, test_app_without_db, monkeypatch):
+        async def mock_get_project_by_id(db_session, project_id):
+            return True
+
+        monkeypatch.setattr(project_notes, "get_project_by_id", mock_get_project_by_id)
+
+        async def mock_get_note_by_id(note_id, db_session):
+            class MockNote:
+                id = 1
+                project_id = 1
+
+            mock_note = MockNote()
+            return mock_note
+
+        monkeypatch.setattr(project_notes, "get_note_by_id", mock_get_note_by_id)
+
+        mock_delete_note = AsyncMock()
+        monkeypatch.setattr(project_notes, "delete_note", mock_delete_note)
+
+        response = test_app_without_db.delete("/projects/1/notes/1")
+
+        # assert function without return value was called correctly
+        mock_delete_note.assert_called_once_with(note_id=1, db_session=ANY)
+
+        # assert response
+        assert response.status_code == 200
+        assert response.json()["message"] == "Note deleted"
+
+    def test_delete_note_does_not_delete_if_project_does_not_exist(
+        self, test_app_without_db, monkeypatch
+    ):
+        async def mock_get_project_by_id(db_session, project_id):
+            return False
+
+        monkeypatch.setattr(project_notes, "get_project_by_id", mock_get_project_by_id)
+
+        response = test_app_without_db.delete("/projects/1/notes/1")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found"
+
+    def test_delete_note_does_not_delete_if_it_does_not_exist(
+        self, test_app_without_db, monkeypatch
+    ):
+        async def mock_get_project_by_id(db_session, project_id):
+            return True
+
+        monkeypatch.setattr(project_notes, "get_project_by_id", mock_get_project_by_id)
+
+        async def mock_get_note_by_id(note_id, db_session):
+            return False
+
+        monkeypatch.setattr(project_notes, "get_note_by_id", mock_get_note_by_id)
+
+        response = test_app_without_db.delete("/projects/1/notes/1")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Note id not found"
+
+    def test_delete_note_does_not_delete_if_note_does_not_belong_to_project(
+        self, test_app_without_db, monkeypatch
+    ):
+        async def mock_get_project_by_id(db_session, project_id):
+            return True
+
+        monkeypatch.setattr(project_notes, "get_project_by_id", mock_get_project_by_id)
+
+        async def mock_get_note_by_id(note_id, db_session):
+            class MockNote:
+                project_id = 1
+
+            mock_note = MockNote()
+            return mock_note
+
+        monkeypatch.setattr(project_notes, "get_note_by_id", mock_get_note_by_id)
+
+        response = test_app_without_db.delete("/projects/2/notes/999")
+
+        assert response.status_code == 404
+        assert (
+            response.json()["detail"] == "The note id cannot be found for this project."
+        )
