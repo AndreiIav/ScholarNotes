@@ -2,7 +2,7 @@ from typing import Any, Iterable
 
 from app.models import Note, Project, Tag
 from app.schemas.project_notes import ProjectNotePayloadSchema
-from sqlalchemy import Row, and_, select, update
+from sqlalchemy import Row, and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -120,3 +120,9 @@ async def remove_tags_from_note(
 
     await db_session.commit()
     await db_session.refresh(note)
+
+
+async def delete_note(note_id: int, db_session: AsyncSession) -> None:
+    query = delete(Note).where(Note.id == note_id)
+    await db_session.execute(query)
+    await db_session.commit()

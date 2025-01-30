@@ -3,6 +3,7 @@ from typing import Annotated
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import get_project_by_id
 from app.crud.project_notes import (
+    delete_note,
     get_all_notes_for_project,
     get_note_by_id,
     get_note_by_name_and_project,
@@ -10,6 +11,7 @@ from app.crud.project_notes import (
     update_note,
 )
 from app.schemas.project_notes import (
+    ProjectNoteDeleteResponseSchema,
     ProjectNotePayloadSchema,
     ProjectNoteResponseSchema,
     ProjectNoteUpdateSchema,
@@ -204,3 +206,32 @@ async def patch_note(
         "created_at": updated_note.created_at,
         "note_tags": [tag.name for tag in updated_note.tags],
     }
+
+
+@router.delete(
+    "/{note_id}/", response_model=ProjectNoteDeleteResponseSchema, status_code=200
+)
+async def delete_project_note(
+    db_session: DBSessionDep,
+    project_id: Annotated[int, Path(title="The ID of the note to delete", gt=0)],
+    note_id: Annotated[int, Path(title="The ID of the note to update", gt=0)],
+) -> ProjectNoteDeleteResponseSchema:
+    project = await get_project_by_id(db_session=db_session, project_id=project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project id not found")
+
+    note = await get_note_by_id(note_id=note_id, db_session=db_session)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note id not found")
+
+    # check if the requested note belongs to the requested project_id
+    if note.project_id != project_id:
+        raise HTTPException(
+            status_code=404, detail="The note id cannot be found for this project."
+        )
+
+    await delete_note(note_id=note_id, db_session=db_session)
+
+    response = {"message": "Note deleted"}
+
+    return response
