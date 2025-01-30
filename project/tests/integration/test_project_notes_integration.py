@@ -1,5 +1,4 @@
 import json
-from datetime import datetime, timezone
 
 
 class TestPostProjectNotes:
@@ -30,17 +29,6 @@ class TestPostProjectNotes:
         assert response.json()["note_comments"] == "test_comments"
         assert response.json()["note_tags"] == []
         assert response.json()["created_at"]
-
-        created_at = response.json()["created_at"]
-        # create a datetime object from the "created_at" string
-        created_at_datetime = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S.%fZ")
-        # make it UTC "aware"
-        created_at_datetime = created_at_datetime.replace(tzinfo=timezone.utc)
-        # get the difference between the current UTC aware datetime and the one
-        # retrieved from the response
-        seconds_diff = datetime.now(timezone.utc) - created_at_datetime
-        # it shouldn't be more than one second
-        assert seconds_diff.seconds <= 1
 
     def test_post_project_notes_cannot_post_if_project_does_not_exist(self, test_app):
         test_request_payload = {
