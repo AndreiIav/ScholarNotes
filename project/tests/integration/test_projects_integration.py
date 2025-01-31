@@ -2,16 +2,30 @@ import json
 
 
 class TestPostProject:
-    def test_add_new_project(self, test_app, delete_project_table_data):
+    def test_add_new_project_ads_project(self, test_app, delete_project_table_data):
         payload = {"name": "test_name", "comment": "test_comment"}
 
-        res = test_app.post("/projects", data=json.dumps(payload))
+        response = test_app.post("/projects", data=json.dumps(payload))
 
-        assert res.status_code == 201
-        assert res.json()["id"]
-        assert res.json()["name"] == "test_name"
-        assert res.json()["comment"] == "test_comment"
-        assert res.json()["created_at"]
+        assert response.status_code == 201
+        assert response.json()["id"]
+        assert response.json()["name"] == "test_name"
+        assert response.json()["comment"] == "test_comment"
+        assert response.json()["created_at"]
+
+    def test_add_new_project_does_not_add_project_if_it_already_exists(
+        self, test_app, add_project_data, delete_project_table_data
+    ):
+        project_name = "test_name"
+        payload = {"name": project_name, "comment": "test_comment"}
+
+        response = test_app.post("/projects", data=json.dumps(payload))
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == (
+            f"Project name '{project_name}' already exists. Please"
+            " select a unique project name and try again."
+        )
 
 
 class TestGetAllProjects:
