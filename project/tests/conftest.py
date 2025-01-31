@@ -10,7 +10,7 @@ from app.database import DatabaseSessionManager, get_db_session
 from app.main import create_application
 from app.models import Note, Project, Tag
 from fastapi.testclient import TestClient
-from sqlalchemy import delete, insert
+from sqlalchemy import delete, insert, text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
@@ -46,7 +46,7 @@ async def get_test_session_override():
     sessionmanager = DatabaseSessionManager(database_url)
     async with sessionmanager.session() as session:
         yield session
-        await session.close()
+        # await session.close()
 
 
 @pytest.fixture(scope="module")
@@ -74,7 +74,7 @@ async def get_session():
     sessionmanager = DatabaseSessionManager(database_url)
     async with sessionmanager.session() as session:
         yield session
-        await session.close()
+        # await session.close()
 
 
 @pytest.fixture(scope="function")
@@ -101,6 +101,17 @@ async def delete_project_table_data(get_session):
     await session.commit()
 
 
+async def reset_table_sequence(table_name, session):
+    """Resets PostgreSQL auto-increment sequence"""
+    await session.execute(
+        text(
+            f"SELECT setval(pg_get_serial_sequence('{table_name}', 'id'),"
+            f"(SELECT MAX(id) FROM {table_name}));"
+        )
+    )
+    await session.commit()
+
+
 @pytest.fixture(scope="function")
 async def add_project_notes_data(get_session):
     """
@@ -115,8 +126,12 @@ async def add_project_notes_data(get_session):
       - two rows in tags table (the tags are linked to notes.id=1):
             id=1, name='tag_1'
             id=2, name='tag_2'
-    In order to clean_up the data use the following fixtures:
-    'delete_project_notes_data', 'delete_tags_data'.
+
+    Note: To clean_up the data use the following fixtures:
+         'delete_project_notes_data', 'delete_tags_data'.
+    Note: To set correctly PostgreSQL's primary key auto-increment sequence,
+          'reset_table_sequence' function is used on all tables where ids were
+          inserted manually.
     """
     insert_project_1 = insert(Project).values(
         id=1, name="project_1", comment="test_comment"
@@ -168,6 +183,11 @@ async def add_project_notes_data(get_session):
     note_1.tags.extend([tag_1, tag_2])
     await session.commit()
 
+    # reset PostgreSQL primary-key auto-increment sequence
+    await reset_table_sequence(table_name="notes", session=session)
+    await reset_table_sequence(table_name="tags", session=session)
+    await reset_table_sequence(table_name="projects", session=session)
+
     yield
 
 
@@ -187,12 +207,24 @@ async def delete_project_notes_data(get_session):
 
 @pytest.fixture(scope="function")
 async def add_tags_data(get_session):
+    """
+    Inserts two rows in 'tags' table:
+    - id=3, name="tag_3"
+    - id=3, name="tag_3"
+
+    Note: To set correctly PostgreSQL's primary key auto-increment sequence,
+          'reset_table_sequence' function is used on 'tags' table.
+
+    """
     insert_tag_1 = insert(Tag).values(id=3, name="tag_3")
     insert_tag_2 = insert(Tag).values(id=4, name="tag_4")
     session = get_session
     await session.execute(insert_tag_1)
     await session.execute(insert_tag_2)
     await session.commit()
+
+    await reset_table_sequence("tags", get_session)
+
     yield
 
 
