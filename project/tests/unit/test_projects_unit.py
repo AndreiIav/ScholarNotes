@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from unittest.mock import ANY, AsyncMock
 
 from app.api.routers import projects
 
@@ -216,28 +217,20 @@ class TestPatchProject:
 
 class TestDeleteProject:
     def test_delete_project_deletes_project(self, test_app_without_db, monkeypatch):
-        class DummyProject:
-            id = 1
-            name = "test_name"
-            comment = "test_comment"
-            created_at = datetime(2024, 12, 1).isoformat()
-
         async def mock_get_project_by_id(db_session, project_id):
             return True
 
         monkeypatch.setattr(projects, "get_project_by_id", mock_get_project_by_id)
 
-        async def mock_remove_project(project_id, db_session):
-            dummy_project = DummyProject()
-            return dummy_project
+        mock_remove_project = AsyncMock()
 
         monkeypatch.setattr(projects, "remove_project", mock_remove_project)
 
         response = test_app_without_db.delete("/projects/1/")
 
+        mock_remove_project.assert_called_once_with(project_id=1, db_session=ANY)
         assert response.status_code == 200
-        assert response.json()["name"] == "test_name"
-        assert response.json()["comment"] == "test_comment"
+        assert response.json()["message"] == "Project deleted"
 
     def test_delete_project_cannot_delete_not_existent_project(
         self, test_app_without_db, monkeypatch

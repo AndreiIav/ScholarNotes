@@ -13,3 +13,7 @@ class ProjectResponseSchema(BaseModel):
 class ProjectPayloadSchema(BaseModel):
     name: str
     comment: str | None = None
+
+
+class ProjectDeleteSchema(BaseModel):
+    message: str

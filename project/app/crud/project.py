@@ -57,13 +57,7 @@ async def update_project(
     return result.unique().one()
 
 
-async def remove_project(project_id: int, db_session: AsyncSession) -> ProjectDBModel:
-    query = (
-        delete(ProjectDBModel)
-        .where(ProjectDBModel.id == project_id)
-        .returning(ProjectDBModel)
-    )
-    result = await db_session.scalars(query)
+async def remove_project(project_id: int, db_session: AsyncSession) -> None:
+    query = delete(ProjectDBModel).where(ProjectDBModel.id == project_id)
+    await db_session.execute(query)
     await db_session.commit()
-
-    return result.unique().one()

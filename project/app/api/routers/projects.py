@@ -9,7 +9,11 @@ from app.crud.project import (
     remove_project,
     update_project,
 )
-from app.schemas.project import ProjectPayloadSchema, ProjectResponseSchema
+from app.schemas.project import (
+    ProjectDeleteSchema,
+    ProjectPayloadSchema,
+    ProjectResponseSchema,
+)
 from fastapi import APIRouter, HTTPException, Path
 
 router = APIRouter()
@@ -80,15 +84,17 @@ async def patch_project(
     return updated_project
 
 
-@router.delete("/{project_id}/", response_model=ProjectResponseSchema, status_code=200)
+@router.delete("/{project_id}/", response_model=ProjectDeleteSchema, status_code=200)
 async def delete_project(
     db_session: DBSessionDep,
     project_id: Annotated[int, Path(title="The ID of the item to delete", gt=0)],
-) -> ProjectResponseSchema:
+):
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found.")
 
-    deleted_project = await remove_project(project_id=project_id, db_session=db_session)
+    await remove_project(project_id=project_id, db_session=db_session)
 
-    return deleted_project
+    response = {"message": "Project deleted"}
+
+    return response
