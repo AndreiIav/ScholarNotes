@@ -68,7 +68,11 @@ class TestPatchProject:
 
 class TestDeleteProject:
     def test_delete_project_deletes_project(
-        self, test_app, add_project_data, delete_project_table_data
+        self,
+        test_app,
+        add_project_notes_data,
+        delete_project_notes_data,
+        delete_tags_data,
     ):
         delete_project_response = test_app.delete("/projects/1/")
         get_deleted_project_response = test_app.get("/projects/1/")
