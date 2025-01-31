@@ -75,7 +75,7 @@ class TestPostProjectNotes:
         )
 
     def test_post_project_notes_handles_received_inexistent_tags(
-        selft,
+        self,
         test_app,
         add_project_notes_data,
         delete_project_notes_data,
@@ -100,7 +100,7 @@ class TestPostProjectNotes:
             assert tag in response.json()["note_tags"]
 
     def test_post_project_notes_handles_received_already_existent_tags(
-        selft,
+        self,
         test_app,
         add_project_notes_data,
         add_tags_data,
@@ -126,7 +126,7 @@ class TestPostProjectNotes:
             assert tag in response.json()["note_tags"]
 
     def test_post_project_notes_handles_received_inexistent_and_existent_tags(
-        selft,
+        self,
         test_app,
         add_project_notes_data,
         add_tags_data,
