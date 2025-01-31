@@ -19,7 +19,7 @@ async def get_project_by_name(
 ) -> ProjectDBModel | None:
     query = select(ProjectDBModel).where(ProjectDBModel.name == project_name)
     project = await db_session.scalars(query)
-    project = project.one_or_none()
+    project = project.unique().one_or_none()
 
     return project
 
