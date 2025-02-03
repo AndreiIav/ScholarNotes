@@ -13,6 +13,7 @@ from app.schemas.project import (
     ProjectDeleteSchema,
     ProjectPayloadSchema,
     ProjectResponseSchema,
+    ProjectUpdatePayloadSchema,
 )
 from fastapi import APIRouter, HTTPException, Path
 
@@ -60,7 +61,7 @@ async def create_project(
 
 @router.patch("/{project_id}/", response_model=ProjectResponseSchema, status_code=200)
 async def patch_project(
-    payload: ProjectPayloadSchema,
+    payload: ProjectUpdatePayloadSchema,
     db_session: DBSessionDep,
     project_id: Annotated[int, Path(title="The ID of the item to update", gt=0)],
 ) -> ProjectResponseSchema:
