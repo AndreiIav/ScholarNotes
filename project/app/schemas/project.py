@@ -10,7 +10,7 @@ class ProjectResponseSchema(BaseModel):
     created_at: datetime
 
 
-class ProjectPayloadSchema(BaseModel):
+class ProjectPayloadSchema(BaseModel, extra="forbid"):
     name: str
     comment: str | None = None
 

@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class ProjectNotePayloadSchema(BaseModel):
+class ProjectNotePayloadSchema(BaseModel, extra="forbid"):
     note_name: str
     note_author: str | None = None
     note_publication_details: str | None = None
