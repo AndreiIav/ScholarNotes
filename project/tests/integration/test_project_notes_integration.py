@@ -393,10 +393,14 @@ class TestDeleteProjectNote:
         delete_project_notes_data,
         delete_tags_data,
     ):
-        response = test_app.delete("/projects/1/notes/1")
+        delete_note_response = test_app.delete("/projects/1/notes/1")
+        deleted_note_respose = test_app.get("/projects/1/notes/1")
 
-        assert response.status_code == 200
-        assert response.json()["message"] == "Note deleted"
+        assert delete_note_response.status_code == 200
+        assert delete_note_response.json()["message"] == "Note deleted"
+
+        assert deleted_note_respose.status_code == 404
+        assert deleted_note_respose.json()["detail"] == "Note id not found"
 
     def test_delete_note_does_not_delete_if_project_does_not_exist(
         self,

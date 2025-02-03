@@ -2,7 +2,7 @@ import json
 
 
 class TestPostProject:
-    def test_add_new_project_ads_project(self, test_app, delete_project_table_data):
+    def test_add_new_project_creates_project(self, test_app, delete_project_table_data):
         payload = {"name": "test_name", "comment": "test_comment"}
 
         response = test_app.post("/projects", data=json.dumps(payload))
@@ -13,7 +13,7 @@ class TestPostProject:
         assert response.json()["comment"] == "test_comment"
         assert response.json()["created_at"]
 
-    def test_add_new_project_does_not_add_project_if_it_already_exists(
+    def test_add_new_project_does_not_create_project_if_it_already_exists(
         self, test_app, add_project_data, delete_project_table_data
     ):
         project_name = "test_name"
@@ -57,6 +57,14 @@ class TestGetProject:
         assert response.json()["name"] == "test_name"
         assert response.json()["comment"] == "test_comment"
         assert response.json()["created_at"]
+
+    def test_get_not_existent_project(self, test_app):
+        test_project_id = 1
+
+        response = test_app.get(f"/projects/{test_project_id}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Project id not found."
 
 
 class TestPatchProject:

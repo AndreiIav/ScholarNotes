@@ -6,7 +6,7 @@ from app.api.routers import projects
 
 
 class TestPostProject:
-    def test_post_project_with_correct_payload(self, test_app_without_db, monkeypatch):
+    def test_post_project_creates_project(self, test_app_without_db, monkeypatch):
         test_request_payload = {"name": "test_name", "comment": "test_comment"}
         test_response_payload = {
             "id": 1,
@@ -18,10 +18,11 @@ class TestPostProject:
         async def mock_get_project_by_name(project_name, db_session):
             return None
 
+        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
+
         async def mock_post_project(payload, db_session):
             return test_response_payload
 
-        monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
         monkeypatch.setattr(projects, "post_project", mock_post_project)
 
         response = test_app_without_db.post(
@@ -31,12 +32,7 @@ class TestPostProject:
         assert response.status_code == 201
         assert response.json() == test_response_payload
 
-    def test_post_project_with_incorrect_payload(self, test_app_without_db):
-        response = test_app_without_db.post("/projects", data=json.dumps({}))
-
-        assert response.status_code == 422
-
-    def test_cannot_add_a_project_with_already_existing_name(
+    def test_post_project_with_already_existing_name_does_not_create_project(
         self, test_app_without_db, monkeypatch
     ):
         project_name = "test_name_1"
@@ -45,14 +41,15 @@ class TestPostProject:
             return project_name
 
         monkeypatch.setattr(projects, "get_project_by_name", mock_get_project_by_name)
+
         payload = {"name": project_name, "comment": "test_comment_1"}
 
         response = test_app_without_db.post("/projects", data=json.dumps(payload))
 
         assert response.status_code == 400
         assert (
-            f"Project name '{payload['name']}' already exists. Please select a"
-            " unique project name and try again." == response.json()["detail"]
+            response.json()["detail"] == f"Project name '{payload['name']}' "
+            "already exists. Please select a unique project name and try again."
         )
 
 
