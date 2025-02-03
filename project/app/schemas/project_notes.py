@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from app.schemas.base import CustomCheckAtLeastOnePairValidator
 from pydantic import BaseModel
 
 
@@ -24,7 +25,9 @@ class ProjectNoteResponseSchema(BaseModel):
     note_tags: list[str] = []
 
 
-class ProjectNoteUpdateSchema(BaseModel, extra="forbid"):
+class ProjectNoteUpdateSchema(
+    BaseModel, CustomCheckAtLeastOnePairValidator, extra="forbid"
+):
     name: str | None = None
     author: str | None = None
     publication_details: str | None = None
