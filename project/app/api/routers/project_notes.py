@@ -156,18 +156,19 @@ async def patch_note(
         )
 
     # check if the note name is requested to be updated
-    if note.name != payload.name:
-        # check if the updated name already exists on the project
-        note_updated_name = await get_note_by_name_and_project(
-            note_name=payload.name, project_id=project_id, db_session=db_session
-        )
-        if note_updated_name:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Note name '{payload.name}' already exists on "
-                f"'{project.name}' project. Please select a unique note name and "
-                "try again.",
+    if payload.name:
+        if note.name != payload.name:
+            # check if the updated name already exists on the project
+            note_updated_name = await get_note_by_name_and_project(
+                note_name=payload.name, project_id=project_id, db_session=db_session
             )
+            if note_updated_name:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Note name '{payload.name}' already exists on "
+                    f"'{project.name}' project. Please select a unique note name and "
+                    "try again.",
+                )
 
     update_data = payload.model_dump(exclude_unset=True)
 
