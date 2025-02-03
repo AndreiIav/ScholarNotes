@@ -11,7 +11,7 @@ class ProjectResponseSchema(BaseModel):
 
 
 class ProjectPayloadSchema(BaseModel, extra="forbid"):
-    name: str
+    name: str | None = None
     comment: str | None = None
 
 

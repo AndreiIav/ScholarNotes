@@ -1,3 +1,5 @@
+from typing import Any
+
 from app.models import Project as ProjectDBModel
 from app.schemas.project import ProjectPayloadSchema
 from sqlalchemy import delete, select, update
@@ -43,12 +45,12 @@ async def get_all_projects(db_session: AsyncSession) -> list[ProjectDBModel] | N
 
 
 async def update_project(
-    project_id: int, payload: ProjectPayloadSchema, db_session: AsyncSession
+    project_id: int, payload: dict[str, Any], db_session: AsyncSession
 ) -> ProjectDBModel:
     query = (
         update(ProjectDBModel)
         .where(ProjectDBModel.id == project_id)
-        .values(name=payload.name, comment=payload.comment)
+        .values(payload)
         .returning(ProjectDBModel)
     )
     result = await db_session.scalars(query)

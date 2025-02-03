@@ -69,17 +69,22 @@ async def patch_project(
         raise HTTPException(status_code=404, detail="Project id not found.")
 
     # check if the project name is requested to be updated
-    if project.name != payload.name:
-        # check if the updated_name already exists
-        updated_name = await get_project_by_name(payload.name, db_session)
-        if updated_name:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Project name '{payload.name}' already exists."
-                " Please select a unique project name and try again.",
-            )
+    if payload.name:
+        if project.name != payload.name:
+            # check if the updated_name already exists
+            updated_name = await get_project_by_name(payload.name, db_session)
+            if updated_name:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Project name '{payload.name}' already exists."
+                    " Please select a unique project name and try again.",
+                )
 
-    updated_project = await update_project(project_id, payload, db_session)
+    update_data = payload.model_dump(exclude_unset=True)
+
+    updated_project = await update_project(
+        project_id=project.id, payload=update_data, db_session=db_session
+    )
 
     return updated_project
 
