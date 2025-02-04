@@ -3,7 +3,7 @@ from typing import Any, AsyncIterator
 
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import (
-    AsyncConnection,
+    AsyncAttrs,
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
@@ -14,10 +14,7 @@ from sqlalchemy.orm import DeclarativeBase
 from app.config import get_settings
 
 
-class Base(DeclarativeBase):
-    # https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html#preventing-implicit-io-when-using-asyncsession
-    __mapper_args__ = {"eager_defaults": True}
-
+class Base(AsyncAttrs, DeclarativeBase):
     metadata = MetaData(
         naming_convention={
             "ix": "ix_%(column_0_label)s",
@@ -47,18 +44,6 @@ class DatabaseSessionManager:
 
         self._engine = None
         self._sessionmaker = None
-
-    @contextlib.asynccontextmanager
-    async def connect(self) -> AsyncIterator[AsyncConnection]:
-        if self._engine is None:
-            raise Exception("DatabaseSessionManager is not initialized")
-
-        async with self._engine.begin() as connection:
-            try:
-                yield connection
-            except Exception:
-                await connection.rollback()
-                raise
 
     @contextlib.asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:
