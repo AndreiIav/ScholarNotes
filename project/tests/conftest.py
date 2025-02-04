@@ -11,7 +11,7 @@ from app.main import create_application
 from app.models import Note, Project, Tag
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, insert, text
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 
 def get_settings_override():
@@ -46,7 +46,6 @@ async def get_test_session_override():
     sessionmanager = DatabaseSessionManager(database_url)
     async with sessionmanager.session() as session:
         yield session
-        # await session.close()
 
 
 @pytest.fixture(scope="module")
@@ -74,7 +73,6 @@ async def get_session():
     sessionmanager = DatabaseSessionManager(database_url)
     async with sessionmanager.session() as session:
         yield session
-        # await session.close()
 
 
 @pytest.fixture(scope="function")
@@ -101,7 +99,7 @@ async def delete_project_table_data(get_session):
     await session.commit()
 
 
-async def reset_table_sequence(table_name, session):
+async def reset_table_sequence(table_name: str, session: AsyncSession) -> None:
     """Resets PostgreSQL auto-increment sequence"""
     await session.execute(
         text(
