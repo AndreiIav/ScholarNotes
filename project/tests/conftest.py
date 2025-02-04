@@ -208,7 +208,7 @@ async def add_tags_data(get_session):
     """
     Inserts two rows in 'tags' table:
     - id=3, name="tag_3"
-    - id=3, name="tag_3"
+    - id=4, name="tag_4"
 
     Note: To set correctly PostgreSQL's primary key auto-increment sequence,
           'reset_table_sequence' function is used on 'tags' table.
