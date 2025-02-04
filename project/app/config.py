@@ -10,10 +10,10 @@ log = logging.getLogger("uvicorn")
 class Settings(BaseSettings):
     environment: str = "dev"
     testing: bool = bool(0)
-    database_url: AnyUrl = None
+    database_url: AnyUrl | None = None
 
 
 @lru_cache()
-def get_settings() -> BaseSettings:
+def get_settings() -> Settings:
     log.info("Loading config settings from the environment...")
     return Settings()

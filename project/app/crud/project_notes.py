@@ -8,19 +8,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 async def get_note_by_name_and_project(
     note_name: str, project_id: int, db_session: AsyncSession
-) -> Row | None:
+) -> Row[tuple[str, str]] | None:
     query = (
         select(Note.name.label("note_name"), Project.name.label("project_name"))
         .join(Note.project)
         .where(and_(Note.name == note_name, Note.project_id == project_id))
     )
-    note = await db_session.execute(query)
-    note = note.unique().one_or_none()
+    query_result = await db_session.execute(query)
+    note = query_result.unique().one_or_none()
 
     return note
 
 
-async def get_all_notes_for_project(project_id: int, db_session: AsyncSession):
+async def get_all_notes_for_project(
+    project_id: int, db_session: AsyncSession
+) -> Iterable[Note]:
     query = select(Note).where(Note.project_id == project_id)
     all_project_notes = await db_session.scalars(query)
     result = all_project_notes.unique().all()
@@ -52,7 +54,7 @@ async def insert_note(
 
 
 async def get_tags_to_be_inserted(
-    tags: list[str], db_session: AsyncSession
+    tags: Iterable[str], db_session: AsyncSession
 ) -> list[str]:
     query = select(Tag.name).where(Tag.name.in_(tags))
     result = await db_session.scalars(query)
@@ -73,20 +75,22 @@ async def insert_tags(tags: list[str], db_session: AsyncSession) -> None:
     await db_session.commit()
 
 
-async def get_tags_by_name(tags: Iterable[str], db_session: AsyncSession) -> list[Tag]:
+async def get_tags_by_name(
+    tags: Iterable[str], db_session: AsyncSession
+) -> Iterable[Tag]:
     query = select(Tag).where(Tag.name.in_(tags))
-    result = await db_session.scalars(query)
-    result = result.all()
+    query_result = await db_session.scalars(query)
+    result = query_result.all()
 
     return result
 
 
-async def get_note_by_id(note_id: int, db_session: AsyncSession):
+async def get_note_by_id(note_id: int, db_session: AsyncSession) -> Note | None:
     query = select(Note).where(Note.id == note_id)
-    result = await db_session.scalars(query)
-    result = result.unique().one_or_none()
+    query_result = await db_session.scalars(query)
+    note = query_result.unique().one_or_none()
 
-    return result
+    return note
 
 
 async def update_note(
@@ -99,8 +103,10 @@ async def update_note(
     return result.unique().one()
 
 
-async def add_tags_to_note(tags: Iterable[str], note: Note, db_session: AsyncSession):
-    tags_to_be_added: list[Tag] = await get_tags_by_name(
+async def add_tags_to_note(
+    tags: Iterable[str], note: Note, db_session: AsyncSession
+) -> None:
+    tags_to_be_added: Iterable[Tag] = await get_tags_by_name(
         tags=tags, db_session=db_session
     )
     note.tags.extend(tags_to_be_added)
@@ -112,7 +118,7 @@ async def add_tags_to_note(tags: Iterable[str], note: Note, db_session: AsyncSes
 async def remove_tags_from_note(
     tags: Iterable[str], note: Note, db_session: AsyncSession
 ) -> None:
-    tags_to_be_removed: list[Tag] = await get_tags_by_name(
+    tags_to_be_removed: Iterable[Tag] = await get_tags_by_name(
         tags=tags, db_session=db_session
     )
     for tag in tags_to_be_removed:

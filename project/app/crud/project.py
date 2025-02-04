@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Iterable
 
 from app.models import Project as ProjectDBModel
 from app.schemas.project import ProjectPayloadSchema
@@ -10,8 +10,8 @@ async def get_project_by_id(
     db_session: AsyncSession, project_id: int
 ) -> ProjectDBModel | None:
     query = select(ProjectDBModel).where(ProjectDBModel.id == project_id)
-    project = await db_session.scalars(query)
-    project = project.unique().one_or_none()
+    query_result = await db_session.scalars(query)
+    project = query_result.unique().one_or_none()
 
     return project
 
@@ -20,8 +20,8 @@ async def get_project_by_name(
     project_name: str, db_session: AsyncSession
 ) -> ProjectDBModel | None:
     query = select(ProjectDBModel).where(ProjectDBModel.name == project_name)
-    project = await db_session.scalars(query)
-    project = project.unique().one_or_none()
+    query_result = await db_session.scalars(query)
+    project = query_result.unique().one_or_none()
 
     return project
 
@@ -37,7 +37,7 @@ async def post_project(
     return new_project
 
 
-async def get_all_projects(db_session: AsyncSession) -> list[ProjectDBModel] | None:
+async def get_all_projects(db_session: AsyncSession) -> Iterable[ProjectDBModel] | None:
     query = select(ProjectDBModel).order_by(ProjectDBModel.id)
     all_projects = await db_session.scalars(query)
 

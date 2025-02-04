@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Iterable
 
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import (
@@ -9,6 +9,7 @@ from app.crud.project import (
     remove_project,
     update_project,
 )
+from app.models import Project
 from app.schemas.project import (
     ProjectDeleteSchema,
     ProjectPayloadSchema,
@@ -27,7 +28,7 @@ router = APIRouter()
 async def get_project(
     db_session: DBSessionDep,
     project_id: Annotated[int, Path(title="The ID of the item to get", gt=0)],
-) -> ProjectResponseSchema:
+) -> Project:
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found.")
@@ -36,7 +37,7 @@ async def get_project(
 
 
 @router.get("/", response_model=list[ProjectResponseSchema])
-async def get_projects(db_session: DBSessionDep) -> list[ProjectResponseSchema]:
+async def get_projects(db_session: DBSessionDep) -> Iterable[Project] | None:
     all_projects = await get_all_projects(db_session)
 
     return all_projects
@@ -45,7 +46,7 @@ async def get_projects(db_session: DBSessionDep) -> list[ProjectResponseSchema]:
 @router.post("/", response_model=ProjectResponseSchema, status_code=201)
 async def create_project(
     payload: ProjectPayloadSchema, db_session: DBSessionDep
-) -> ProjectResponseSchema:
+) -> Project:
     project = await get_project_by_name(payload.name, db_session)
     if project:
         raise HTTPException(
@@ -64,7 +65,7 @@ async def patch_project(
     payload: ProjectUpdatePayloadSchema,
     db_session: DBSessionDep,
     project_id: Annotated[int, Path(title="The ID of the item to update", gt=0)],
-) -> ProjectResponseSchema:
+) -> Project:
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found.")
@@ -94,7 +95,7 @@ async def patch_project(
 async def delete_project(
     db_session: DBSessionDep,
     project_id: Annotated[int, Path(title="The ID of the item to delete", gt=0)],
-):
+) -> dict[str, str]:
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found.")

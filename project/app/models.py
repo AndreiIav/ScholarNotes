@@ -51,7 +51,7 @@ class Project(Base):
         passive_deletes=True,
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Project({self.id}, '{self.name}')"
 
 
@@ -86,7 +86,7 @@ class Note(Base):
 
     UniqueConstraint(project_id, name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Note({self.id}, '{self.name}')"
 
 
@@ -100,5 +100,5 @@ class Tag(Base):
         lazy="selectin", secondary=NoteTag, back_populates="tags", passive_deletes=True
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Tag({self.id}, '{self.name}')"

@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import get_project_by_id
@@ -29,7 +29,7 @@ async def add_note_to_project(
         int, Path(title="The ID of the project to add the note for", gt=0)
     ],
     payload: ProjectNotePayloadSchema,
-) -> ProjectNoteResponseSchema:
+) -> dict[str, Any]:
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found")
@@ -70,7 +70,7 @@ async def get_all_project_notes(
     project_id: Annotated[
         int, Path(title="The ID of the project to get the notes for", gt=0)
     ],
-) -> list[ProjectNoteResponseSchema]:
+) -> list[dict[str, Any]]:
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found")
@@ -102,7 +102,7 @@ async def get_project_note(
         int, Path(title="The ID of the project to get the note for", gt=0)
     ],
     note_id: Annotated[int, Path(title="The ID of the note to get", gt=0)],
-) -> ProjectNoteResponseSchema:
+) -> dict[str, Any]:
     project = await get_project_by_id(db_session, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found")
@@ -140,7 +140,7 @@ async def patch_note(
         int, Path(title="The ID of the project to update the note for", gt=0)
     ],
     note_id: Annotated[int, Path(title="The ID of the note to update", gt=0)],
-) -> ProjectNoteResponseSchema:
+) -> dict[str, Any]:
     project = await get_project_by_id(db_session=db_session, project_id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found")
@@ -190,7 +190,7 @@ async def patch_note(
     # in the payload; in this case we don't need to perform any update in
     # "notes" table
     if update_data:
-        updated_note = await update_note(
+        updated_note: Any = await update_note(
             payload=update_data, note_id=note_id, db_session=db_session
         )
     else:
@@ -216,7 +216,7 @@ async def delete_project_note(
     db_session: DBSessionDep,
     project_id: Annotated[int, Path(title="The ID of the note to delete", gt=0)],
     note_id: Annotated[int, Path(title="The ID of the note to update", gt=0)],
-) -> ProjectNoteDeleteResponseSchema:
+) -> dict[str, str]:
     project = await get_project_by_id(db_session=db_session, project_id=project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project id not found")

@@ -1,5 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator
 
 from fastapi import FastAPI
 
@@ -10,7 +11,7 @@ log = logging.getLogger("uvicorn")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[Any]:
     """
     Function that handles startup and shutdown events.
     """

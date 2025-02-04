@@ -4,6 +4,7 @@ from typing import Any, AsyncIterator
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
@@ -32,12 +33,14 @@ class Base(DeclarativeBase):
 # https://medium.com/@tclaitken/setting-up-a-fastapi-app-with-async-sqlalchemy-2-0-pydantic-v2-e6c540be4308
 class DatabaseSessionManager:
     def __init__(self, host: str, engine_kwargs: dict[str, Any] = {}):
-        self._engine = create_async_engine(host, **engine_kwargs)
-        self._sessionmaker = async_sessionmaker(
-            autocommit=False, bind=self._engine, expire_on_commit=False
+        self._engine: AsyncEngine | None = create_async_engine(host, **engine_kwargs)
+        self._sessionmaker: async_sessionmaker[AsyncSession] | None = (
+            async_sessionmaker(
+                autocommit=False, bind=self._engine, expire_on_commit=False
+            )
         )
 
-    async def close(self):
+    async def close(self) -> None:
         if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
         await self._engine.dispose()
@@ -77,6 +80,6 @@ database_url = str(settings.database_url)
 sessionmanager = DatabaseSessionManager(database_url)
 
 
-async def get_db_session():
+async def get_db_session() -> AsyncIterator[AsyncSession]:
     async with sessionmanager.session() as session:
         yield session

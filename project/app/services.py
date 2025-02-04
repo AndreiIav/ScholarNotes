@@ -11,7 +11,7 @@ from app.crud.project_notes import (
 from app.models import Note
 
 
-async def insert_missing_tags(tags: Iterable[str], db_session: AsyncSession):
+async def insert_missing_tags(tags: Iterable[str], db_session: AsyncSession) -> None:
     """
     Orchestrates inserting tags that are not already in 'tags' table.
 
@@ -30,7 +30,7 @@ async def handle_note_tags_update(
     existing_note_tags: Iterable[str],
     payload_tags: Iterable[str],
     db_session: AsyncSession,
-):
+) -> None:
     """
     Orchestrates adding or removing tags for a single note.
 
