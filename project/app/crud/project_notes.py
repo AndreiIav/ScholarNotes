@@ -1,9 +1,10 @@
 from typing import Any, Iterable
 
-from app.models import Note, Project, Tag
-from app.schemas.project_notes import ProjectNotePayloadSchema
 from sqlalchemy import Row, and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Note, Project, Tag
+from app.schemas.project_notes import ProjectNotePayloadSchema
 
 
 async def get_note_by_name_and_project(

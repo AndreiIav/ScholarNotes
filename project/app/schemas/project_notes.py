@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from app.schemas.base import CustomCheckAtLeastOnePairValidator
 from pydantic import BaseModel
+
+from app.schemas.base import CustomCheckAtLeastOnePairValidator
 
 
 class ProjectNotePayloadSchema(BaseModel, extra="forbid"):

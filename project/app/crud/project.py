@@ -1,9 +1,10 @@
 from typing import Any, Iterable
 
-from app.models import Project as ProjectDBModel
-from app.schemas.project import ProjectPayloadSchema
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Project as ProjectDBModel
+from app.schemas.project import ProjectPayloadSchema
 
 
 async def get_project_by_id(

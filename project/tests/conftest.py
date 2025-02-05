@@ -4,14 +4,15 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 
 import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import delete, insert, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
 from alembic import command, config
 from app.config import Settings, get_settings
 from app.database import DatabaseSessionManager, get_db_session
 from app.main import create_application
 from app.models import Note, Project, Tag
-from fastapi.testclient import TestClient
-from sqlalchemy import delete, insert, text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 
 def get_settings_override():

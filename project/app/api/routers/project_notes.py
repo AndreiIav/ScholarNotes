@@ -1,5 +1,7 @@
 from typing import Annotated, Any
 
+from fastapi import APIRouter, HTTPException, Path
+
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import get_project_by_id
 from app.crud.project_notes import (
@@ -17,7 +19,6 @@ from app.schemas.project_notes import (
     ProjectNoteUpdateSchema,
 )
 from app.services import handle_note_tags_update, insert_missing_tags
-from fastapi import APIRouter, HTTPException, Path
 
 router = APIRouter()
 

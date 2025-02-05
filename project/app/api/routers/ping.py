@@ -1,7 +1,8 @@
 from typing import Any
 
-from app.config import Settings, get_settings
 from fastapi import APIRouter, Depends
+
+from app.config import Settings, get_settings
 
 ping_router = APIRouter()
 

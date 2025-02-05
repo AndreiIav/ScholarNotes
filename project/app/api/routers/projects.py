@@ -1,5 +1,7 @@
 from typing import Annotated, Iterable
 
+from fastapi import APIRouter, HTTPException, Path
+
 from app.api.dependencies.core import DBSessionDep
 from app.crud.project import (
     get_all_projects,
@@ -16,7 +18,6 @@ from app.schemas.project import (
     ProjectResponseSchema,
     ProjectUpdatePayloadSchema,
 )
-from fastapi import APIRouter, HTTPException, Path
 
 router = APIRouter()
 
