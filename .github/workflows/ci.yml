@@ -26,6 +26,9 @@ jobs:
     - name: Build Docker Container
       run: | 
         docker compose -f docker-compose.yml up -d --build
+    - name: Lint code with Ruff
+      run: |
+        docker compose exec web ruff check --output-format=github .
     - name: Run tests
       run : |
         docker compose exec web pytest
