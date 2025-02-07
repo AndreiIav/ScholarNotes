@@ -1,4 +1,4 @@
-# FastAPI application with SQLAlchemy
+# Asynchronous RESTful API with Python, FastAPI and SQLAlchemy
 This FastAPI application is designed for managing articles and book notes. It supports full CRUD operations and leverages SQLAlchemy, Alembic, PostgreSQL, and Docker for database management and deployment. The project was created for learning purposes.
 
 # Features
